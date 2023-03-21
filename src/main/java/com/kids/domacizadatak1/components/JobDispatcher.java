@@ -1,4 +1,4 @@
-package com.kids.domacizadatak1.threads;
+package com.kids.domacizadatak1.components;
 
 public class JobDispatcher implements Runnable{
 

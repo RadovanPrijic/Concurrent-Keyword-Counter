@@ -15,12 +15,16 @@ public class FileScanner implements Runnable {
     private BlockingQueue<Result> resultQueue;
     private ExecutorService fileScannerThreadPool;
     private ExecutorCompletionService<Map<String, Integer>> fileScannerResults;
+    private String keywords;
+    private Integer fileScanningSizeLimit;
 
-    public FileScanner(BlockingQueue<FileJob> fileScannerJobQueue, BlockingQueue<Result> resultQueue) {
+    public FileScanner(BlockingQueue<FileJob> fileScannerJobQueue, BlockingQueue<Result> resultQueue, String keywords, Integer fileScanningSizeLimit) {
         this.fileScannerJobQueue = fileScannerJobQueue;
         this.resultQueue = resultQueue;
         this.fileScannerThreadPool = new ForkJoinPool();
         this.fileScannerResults = new ExecutorCompletionService<>(this.fileScannerThreadPool);
+        this.keywords = keywords;
+        this.fileScanningSizeLimit = fileScanningSizeLimit;
     }
 
     @Override
@@ -28,8 +32,10 @@ public class FileScanner implements Runnable {
         while (true) {
             try {
                 FileJob fileJob = this.fileScannerJobQueue.take();
+                fileJob.setKeywords(keywords);
+                fileJob.setFileScanningSizeLimit(fileScanningSizeLimit);
                 System.out.println(fileJob.getQuery());
-                //fileJob.initiate(this.fileScannerResults);
+                fileJob.initiate(this.fileScannerResults);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

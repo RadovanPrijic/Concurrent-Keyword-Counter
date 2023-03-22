@@ -20,19 +20,18 @@ public class DirectoryCrawler implements Runnable {
     private boolean doTheJob = true;
 
     public DirectoryCrawler(CopyOnWriteArrayList<String> directoriesToCrawl, BlockingQueue<ScanningJob> jobQueue, Integer dirCrawlerSleepTime,
-                            String prefix) {
+                                String prefix) {
         this.directoriesToCrawl = directoriesToCrawl;
         this.jobQueue = jobQueue;
         this.dirCrawlerSleepTime = dirCrawlerSleepTime;
         this.prefix = prefix;
 
-        //this.directoriesToCrawl.add("D:\\kids-domaci-zadatak-1\\example");
+        this.directoriesToCrawl.add("D:\\kids-domaci-zadatak-1\\example");
     }
 
     @Override
     public void run() {
         while(true) {
-            System.out.println("HEFEEEEE");
             for(String filename : directoriesToCrawl){
                 File directory = null;
                 boolean readyToCrawl = true;

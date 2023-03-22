@@ -11,14 +11,15 @@ public class WebJob implements ScanningJob {
     private ScanType scanType;
     private String query;
     private String url;
+    private String keywords;
     private Integer hopCount;
+    private Integer urlRefreshTime;
     private Future<Map<String,Integer>> webJobResult;
 
-    public WebJob(String query, String url, Integer hopCount) {
+    public WebJob(String query, String url) {
         this.scanType = ScanType.WEB;
         this.query = "web|" + url.split("\\.")[1];
         this.url = url;
-        this.hopCount = hopCount;
     }
 
     @Override
@@ -33,7 +34,19 @@ public class WebJob implements ScanningJob {
 
     @Override
     public Future<Map<String,Integer>> initiate(ExecutorCompletionService executorCompletionService) {
-        webJobResult = executorCompletionService.submit((Callable) new WebScannerWorker());
+        webJobResult = executorCompletionService.submit((Callable) new WebScannerWorker()); //TODO Proslediti workeru relevantne parametre
         return webJobResult;
+    }
+
+    public void setKeywords(String keywords) {
+        this.keywords = keywords;
+    }
+
+    public void setHopCount(Integer hopCount) {
+        this.hopCount = hopCount;
+    }
+
+    public void setUrlRefreshTime(Integer urlRefreshTime) {
+        this.urlRefreshTime = urlRefreshTime;
     }
 }

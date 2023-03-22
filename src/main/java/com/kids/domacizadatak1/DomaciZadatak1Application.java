@@ -28,7 +28,7 @@ public class DomaciZadatak1Application {
     private static WebScanner webScanner;
     private static ResultRetriever resultRetriever;
 
-    private static HashMap<String, Integer> keywordsMap = new HashMap<>();
+    private static String keywords;
     private static String fileCorpusPrefix;
     private static Integer dirCrawlerSleepTime;
     private static Integer fileScanningSizeLimit;
@@ -63,11 +63,11 @@ public class DomaciZadatak1Application {
         Thread jobDispatcherThread = new Thread(jobDispatcher);
         jobDispatcherThread.start();
 
-        fileScanner = new FileScanner(fileScannerJobQueue, resultQueue);
+        fileScanner = new FileScanner(fileScannerJobQueue, resultQueue, keywords, fileScanningSizeLimit);
         Thread fileScannerThread = new Thread(fileScanner);
         fileScannerThread.start();
 
-        webScanner = new WebScanner(jobQueue, webScannerJobQueue, resultQueue);
+        webScanner = new WebScanner(jobQueue, webScannerJobQueue, resultQueue, keywords, hopCount, urlRefreshTime);
         Thread webScannerThread = new Thread(webScanner);
         webScannerThread.start();
 
@@ -82,10 +82,7 @@ public class DomaciZadatak1Application {
         String line;
         while ((line = br.readLine()) != null){
             if(line.startsWith("keywords=")){
-                String keywordsArr = line.split("=")[1];
-                String[] keywords = keywordsArr.split(",");
-                for (String keyword : keywords)
-                    keywordsMap.put(keyword, 0);
+                String keywords = line.split("=")[1];
             } else if (line.startsWith("file.corpus.prefix=")){
                 fileCorpusPrefix = line.split("=")[1];
             } else if (line.startsWith("dir.crawler.sleep.time=")){

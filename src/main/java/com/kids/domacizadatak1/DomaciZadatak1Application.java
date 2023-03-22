@@ -5,13 +5,16 @@ import com.kids.domacizadatak1.components.ResultRetriever;
 import com.kids.domacizadatak1.components.WebScanner;
 import com.kids.domacizadatak1.components.DirectoryCrawler;
 import com.kids.domacizadatak1.components.JobDispatcher;
+import com.kids.domacizadatak1.jobs.ScanningJob;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @SpringBootApplication
 public class DomaciZadatak1Application {
@@ -29,13 +32,14 @@ public class DomaciZadatak1Application {
     private static Integer hopCount;
     private static Integer urlRefreshTime;
 
-    private static final CopyOnWriteArrayList<String> directoryPathsToCrawl = new CopyOnWriteArrayList<>();
+    private static final CopyOnWriteArrayList<String> directoriesToCrawl = new CopyOnWriteArrayList<>();
+    private static final BlockingQueue<ScanningJob> jobQueue = new LinkedBlockingQueue<>();
 
     public static void main(String[] args) throws IOException {
         SpringApplication.run(DomaciZadatak1Application.class, args);
 
-        initalizeComponents();
         setPropertyVariables("D:\\kids-domaci-zadatak-1\\src\\main\\resources\\application.properties");
+        initalizeComponents();
 
         while(true) {
             Scanner scanner = new Scanner(System.in);
@@ -45,7 +49,7 @@ public class DomaciZadatak1Application {
     }
 
     public static void initalizeComponents(){
-        directoryCrawler = new DirectoryCrawler(directoryPathsToCrawl, dirCrawlerSleepTime, fileCorpusPrefix);
+        directoryCrawler = new DirectoryCrawler(directoriesToCrawl, jobQueue, dirCrawlerSleepTime, fileCorpusPrefix);
         Thread directoryCrawlerThread = new Thread(directoryCrawler);
         directoryCrawlerThread.start();
 

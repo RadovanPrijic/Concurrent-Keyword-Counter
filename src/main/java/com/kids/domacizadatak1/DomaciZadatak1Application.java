@@ -5,7 +5,10 @@ import com.kids.domacizadatak1.components.ResultRetriever;
 import com.kids.domacizadatak1.components.WebScanner;
 import com.kids.domacizadatak1.components.DirectoryCrawler;
 import com.kids.domacizadatak1.components.JobDispatcher;
+import com.kids.domacizadatak1.jobs.FileJob;
 import com.kids.domacizadatak1.jobs.ScanningJob;
+import com.kids.domacizadatak1.jobs.WebJob;
+import com.kids.domacizadatak1.results.Result;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -32,13 +35,16 @@ public class DomaciZadatak1Application {
     private static Integer hopCount;
     private static Integer urlRefreshTime;
 
-    private static final CopyOnWriteArrayList<String> directoriesToCrawl = new CopyOnWriteArrayList<>();
-    private static final BlockingQueue<ScanningJob> jobQueue = new LinkedBlockingQueue<>();
+    public static final CopyOnWriteArrayList<String> directoriesToCrawl = new CopyOnWriteArrayList<>();
+    public static final BlockingQueue<ScanningJob> jobQueue = new LinkedBlockingQueue<>();
+    public static final BlockingQueue<FileJob> fileScannerJobQueue = new LinkedBlockingQueue<>();
+    public static final BlockingQueue<WebJob> webScannerJobQueue = new LinkedBlockingQueue<>();
+    public static final BlockingQueue<Result> resultQueue = new LinkedBlockingQueue<>();
 
     public static void main(String[] args) throws IOException {
         SpringApplication.run(DomaciZadatak1Application.class, args);
 
-        setPropertyVariables("D:\\kids-domaci-zadatak-1\\src\\main\\resources\\application.properties");
+        setPropertyVariables("src/main/resources/application.properties");
         initalizeComponents();
 
         while(true) {
@@ -53,19 +59,19 @@ public class DomaciZadatak1Application {
         Thread directoryCrawlerThread = new Thread(directoryCrawler);
         directoryCrawlerThread.start();
 
-        jobDispatcher = new JobDispatcher();
+        jobDispatcher = new JobDispatcher(jobQueue, fileScannerJobQueue, webScannerJobQueue);
         Thread jobDispatcherThread = new Thread(jobDispatcher);
         jobDispatcherThread.start();
 
-        fileScanner = new FileScanner();
+        fileScanner = new FileScanner(fileScannerJobQueue, resultQueue);
         Thread fileScannerThread = new Thread(fileScanner);
         fileScannerThread.start();
 
-        webScanner = new WebScanner();
+        webScanner = new WebScanner(jobQueue, webScannerJobQueue, resultQueue);
         Thread webScannerThread = new Thread(webScanner);
         webScannerThread.start();
 
-        resultRetriever = new ResultRetriever();
+        resultRetriever = new ResultRetriever(resultQueue);
         Thread resultRetrieverThread = new Thread(resultRetriever);
         resultRetrieverThread.start();
     }
@@ -93,21 +99,29 @@ public class DomaciZadatak1Application {
         }
     }
 
-    public static void writeCommand(String command){
-        if(command.startsWith("ad ")){
+    public static void writeCommand(String userInput){
+        String command = null;
+        String parameter = null;
 
-        } else if (command.startsWith("aw ")){
+        if(userInput.split(" ").length > 1 ){
+            command = userInput.split(" ")[0];
+            parameter = userInput.split(" ")[1];
+        }
 
-        } else if (command.startsWith("get file|") || command.startsWith("get web|")){
+        if(command.equals("ad")){
 
-        } else if (command.startsWith("query file|") || command.startsWith("query web|")){
+        } else if (command.equals("aw")){
+
+        } else if (command.equals("get")){
+
+        } else if (command.equals("query")){
 
         } else if (command.equals("cfs")){
 
         } else if (command.equals("cws")){
 
         } else if (command.equals("stop")){
-            //TODO Pravilno obustavljanje programa (zatvaranje thread pool-ova, itd.)
+            //TODO Pravilno obustavljanje programa (zatvaranje thread pool-ova, poison pills, itd.)
             System.exit(0);
         } else
             System.out.println("Uneli ste nepostojecu komandu.");

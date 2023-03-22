@@ -3,7 +3,6 @@ package com.kids.domacizadatak1.components;
 
 import com.kids.domacizadatak1.jobs.FileJob;
 import com.kids.domacizadatak1.jobs.ScanningJob;
-import org.springframework.cglib.core.Block;
 
 import java.io.File;
 import java.util.HashMap;
@@ -27,12 +26,13 @@ public class DirectoryCrawler implements Runnable {
         this.dirCrawlerSleepTime = dirCrawlerSleepTime;
         this.prefix = prefix;
 
-        this.directoriesToCrawl.add("D:\\kids-domaci-zadatak-1\\example");
+        //this.directoriesToCrawl.add("D:\\kids-domaci-zadatak-1\\example");
     }
 
     @Override
     public void run() {
         while(true) {
+            System.out.println("HEFEEEEE");
             for(String filename : directoriesToCrawl){
                 File directory = null;
                 boolean readyToCrawl = true;
@@ -74,7 +74,7 @@ public class DirectoryCrawler implements Runnable {
                     doTheJob = checkIfCorpusModified(Objects.requireNonNull(filename.listFiles()));
                     if(doTheJob){
                         try {
-                            jobQueue.put(new FileJob());
+                            jobQueue.put(new FileJob(filename));
                         } catch (Exception e) {
                             e.printStackTrace();
                             continue;
@@ -96,15 +96,13 @@ public class DirectoryCrawler implements Runnable {
                     lastModifiedValues.put(filename, filename.lastModified());
                     modified = true;
                     System.err.println("Text file: " + filename.getName());
-                } else {
-                    if(lastModifiedValues.get(filename) != filename.lastModified()){
-                        lastModifiedValues.put(filename, filename.lastModified());
-                        System.err.println("Text file: " + filename.getName());
-                        return true;
-                    }
+                } else if (lastModifiedValues.get(filename) != filename.lastModified()) {
+                    lastModifiedValues.put(filename, filename.lastModified());
+                    modified = true;
+                    System.err.println("Text file: " + filename.getName());
                 }
             }
         }
-        return false;
+        return modified;
     }
 }

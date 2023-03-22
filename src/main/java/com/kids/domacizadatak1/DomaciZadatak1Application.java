@@ -82,7 +82,7 @@ public class DomaciZadatak1Application {
         String line;
         while ((line = br.readLine()) != null){
             if(line.startsWith("keywords=")){
-                String keywords = line.split("=")[1];
+                keywords = line.split("=")[1];
             } else if (line.startsWith("file.corpus.prefix=")){
                 fileCorpusPrefix = line.split("=")[1];
             } else if (line.startsWith("dir.crawler.sleep.time=")){

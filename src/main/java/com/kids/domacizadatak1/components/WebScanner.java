@@ -38,8 +38,9 @@ public class WebScanner implements Runnable {
                 webJob.setKeywords(keywords);
                 webJob.setHopCount(hopCount);
                 webJob.setUrlRefreshTime(urlRefreshTime);
+                webJob.setCachedThreadPool(webScannerThreadPool);
                 System.out.println(webJob.getQuery());
-                //webJob.initiate(this.webScannerResults);
+                //webJob.initiate();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

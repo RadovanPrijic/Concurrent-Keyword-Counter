@@ -1,6 +1,6 @@
 package com.kids.domacizadatak1.workers;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.RecursiveTask;
 
@@ -43,11 +43,27 @@ public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
     }
 
     public void countKeywords(List<File> files){
+        for (File filename : files) {
+            //System.err.println("File to analyse: " + filename.getName());
+            String line;
+            FileReader file;
+            try {
+                file = new FileReader(filename.getAbsolutePath());
+                BufferedReader br = new BufferedReader(file);
 
+                while ((line = br.readLine()) != null) {
+                    String words[] = line.split("\\s+");
+                    for (String word : words) {
+                        if (keywordsMap.containsKey(word))
+                            keywordsMap.put(word, keywordsMap.get(word) + 1);
+                    }
+                }
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
-    //public Map<String,Integer> countWordsInFiles(List<File> textFiles){
-    //    return
-    //}
 
     private List<File> divideFileList(List<File> textFiles) {
         List<File> breakawayFiles = new ArrayList<>();

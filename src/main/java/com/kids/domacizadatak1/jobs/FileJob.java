@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class FileJob implements ScanningJob{
 
@@ -20,6 +18,7 @@ public class FileJob implements ScanningJob{
     private Integer fileScanningSizeLimit;
     private List<File> textFiles;
     private Future<Map<String,Integer>> fileJobResult;
+    private ForkJoinPool forkJoinPool;
 
     public FileJob(File corpusDirectory) {
         this.scanType = ScanType.FILE;
@@ -29,18 +28,15 @@ public class FileJob implements ScanningJob{
     }
 
     @Override
-    public ScanType getType() {
-        return this.scanType;
-    }
-
-    @Override
-    public String getQuery() {
-        return this.query;
-    }
-
-    @Override
-    public Future<Map<String,Integer>> initiate(ExecutorCompletionService executorCompletionService) {
-        fileJobResult = executorCompletionService.submit((Callable) new FileScannerWorker(textFiles, keywords, fileScanningSizeLimit));
+    public Future<Map<String,Integer>> initiate() {
+        fileJobResult = this.forkJoinPool.submit(new FileScannerWorker(textFiles, keywords, fileScanningSizeLimit));
+        try {
+            System.out.println(fileJobResult.get());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
         return fileJobResult;
     }
 
@@ -53,11 +49,25 @@ public class FileJob implements ScanningJob{
         }
     }
 
+    @Override
+    public ScanType getType() {
+        return this.scanType;
+    }
+
+    @Override
+    public String getQuery() {
+        return this.query;
+    }
+
     public void setKeywords(String keywords) {
         this.keywords = keywords;
     }
 
     public void setFileScanningSizeLimit(Integer fileScanningSizeLimit) {
         this.fileScanningSizeLimit = fileScanningSizeLimit;
+    }
+
+    public void setForkJoinPool(ForkJoinPool forkJoinPool) {
+        this.forkJoinPool = forkJoinPool;
     }
 }

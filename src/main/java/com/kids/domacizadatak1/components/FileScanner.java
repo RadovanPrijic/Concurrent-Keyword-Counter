@@ -34,8 +34,8 @@ public class FileScanner implements Runnable {
                 FileJob fileJob = this.fileScannerJobQueue.take();
                 fileJob.setKeywords(keywords);
                 fileJob.setFileScanningSizeLimit(fileScanningSizeLimit);
-                System.out.println(fileJob.getQuery());
-                fileJob.initiate(this.fileScannerResults);
+                fileJob.setForkJoinPool((ForkJoinPool) fileScannerThreadPool);
+                fileJob.initiate();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

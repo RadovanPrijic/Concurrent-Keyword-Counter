@@ -26,7 +26,7 @@ public class DirectoryCrawler implements Runnable {
         this.dirCrawlerSleepTime = dirCrawlerSleepTime;
         this.prefix = prefix;
 
-        this.directoriesToCrawl.add("D:\\kids-domaci-zadatak-1\\example");
+        this.directoriesToCrawl.add("D:\\kids-domaci-zadatak-1\\test_example");
     }
 
     @Override

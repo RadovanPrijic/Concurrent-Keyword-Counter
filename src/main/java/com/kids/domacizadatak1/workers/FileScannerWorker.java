@@ -2,6 +2,7 @@ package com.kids.domacizadatak1.workers;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RecursiveTask;
 
 public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
@@ -33,7 +34,6 @@ public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
             Map<String,Integer> leftKeywordCountMap = right.compute();
             Map<String,Integer> rightKeywordCountMap = left.join();
 
-            keywordsMap.entrySet();
             for (Map.Entry<String,Integer> entry : keywordsMap.entrySet()) {
                 Integer newCountValue = entry.getValue() + leftKeywordCountMap.get(entry.getKey()) + rightKeywordCountMap.get(entry.getKey());
                 keywordsMap.put(entry.getKey(), newCountValue);
@@ -82,7 +82,7 @@ public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
     }
 
     public void makeKeywordsMap() {
-        this.keywordsMap = new HashMap<>();
+        this.keywordsMap = new ConcurrentHashMap<>();
         String[] keywordsArr = keywords.split(",");
         for (String keyword : keywordsArr)
             keywordsMap.put(keyword, 0);

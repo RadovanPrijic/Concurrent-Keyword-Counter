@@ -32,9 +32,7 @@ public class FileJob implements ScanningJob{
         fileJobResult = this.forkJoinPool.submit(new FileScannerWorker(textFiles, keywords, fileScanningSizeLimit));
         try {
             System.out.println(fileJobResult.get());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
         return fileJobResult;

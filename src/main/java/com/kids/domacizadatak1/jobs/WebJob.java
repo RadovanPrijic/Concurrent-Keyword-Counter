@@ -3,10 +3,7 @@ package com.kids.domacizadatak1.jobs;
 import com.kids.domacizadatak1.workers.WebScannerWorker;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class WebJob implements ScanningJob {
     private ScanType scanType;
@@ -26,7 +23,12 @@ public class WebJob implements ScanningJob {
 
     @Override
     public Future<Map<String,Integer>> initiate() {
-        //webJobResult = executorCompletionService.submit((Callable) new WebScannerWorker()); //TODO Proslediti workeru relevantne parametre
+        webJobResult = this.cachedThreadPool.submit(new WebScannerWorker(keywords, url, hopCount, urlRefreshTime));
+        try {
+            System.out.println(webJobResult.get());
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
         return webJobResult;
     }
 

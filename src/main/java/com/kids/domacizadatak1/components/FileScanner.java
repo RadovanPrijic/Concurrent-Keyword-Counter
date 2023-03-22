@@ -36,6 +36,7 @@ public class FileScanner implements Runnable {
                 fileJob.setFileScanningSizeLimit(fileScanningSizeLimit);
                 fileJob.setForkJoinPool((ForkJoinPool) fileScannerThreadPool);
                 fileJob.initiate();
+                //TODO Slanje ResultRetriever-u rezultata iz initiate metoda
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

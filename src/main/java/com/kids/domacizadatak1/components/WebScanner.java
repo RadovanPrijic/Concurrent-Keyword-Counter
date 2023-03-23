@@ -29,11 +29,16 @@ public class WebScanner implements Runnable {
                 webJob.setJobQueue(jobQueue);
                 webJob.setCachedThreadPool(webScannerThreadPool);
                 webJob.setUrlCache(urlCache);
+                System.err.println("HELLO THERE " + webJob.getUrl());
                 Future<Map<String, Integer>> webJobResult = webJob.initiate();
                 CoreApp.getResultRetriever().addCorpusResult(webJob, webJobResult);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public ConcurrentHashMap<String, Long> getUrlCache() {
+        return urlCache;
     }
 }

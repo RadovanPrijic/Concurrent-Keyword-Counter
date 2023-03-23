@@ -6,12 +6,14 @@ import com.kids.domacizadatak1.components.WebScanner;
 import com.kids.domacizadatak1.components.DirectoryCrawler;
 import com.kids.domacizadatak1.components.JobDispatcher;
 import com.kids.domacizadatak1.jobs.FileJob;
+import com.kids.domacizadatak1.jobs.ScanType;
 import com.kids.domacizadatak1.jobs.ScanningJob;
 import com.kids.domacizadatak1.jobs.WebJob;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.*;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
@@ -25,7 +27,7 @@ public class CoreApp {
     private static JobDispatcher jobDispatcher;
     private static FileScanner fileScanner;
     private static WebScanner webScanner;
-    private static ResultRetriever resultRetriever;
+    private static final ResultRetriever resultRetriever = new ResultRetriever();
 
     public static String keywords;
     public static String fileCorpusPrefix;
@@ -69,10 +71,7 @@ public class CoreApp {
         Thread webScannerThread = new Thread(webScanner);
         webScannerThread.start();
 
-        resultRetriever = new ResultRetriever();
-
-        //ScanningJob webJob = new WebJob("https://www.gatesnotes.com/2019-Annual-Letter", hopCount);
-        //jobQueue.put(webJob);
+        //resultRetriever = new ResultRetriever();
     }
 
     public static void setPropertyVariables() throws IOException {
@@ -95,35 +94,83 @@ public class CoreApp {
         String parameter = null;
 
         if(userInput.split(" ").length > 1 ){
-            command = userInput.split(" ")[0];
-            parameter = userInput.split(" ")[1];
+            command = userInput.split(" ")[0].trim();
+            parameter = userInput.split(" ")[1].trim();
         } else
             command = userInput;
 
         switch (command) {
             case "ad" -> {
-
+                try {
+                    File file = new File(parameter);
+                    System.out.println(file.getName());
+                    directoriesToCrawl.add(parameter);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             case "aw" -> {
-
+                try {
+                    if (!(webScanner.getUrlCache().contains(parameter) &&
+                            System.currentTimeMillis() - webScanner.getUrlCache().get(parameter) < CoreApp.urlRefreshTime))
+                        jobQueue.add(new WebJob(parameter, hopCount));
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             case "get" -> {
+                // Get single result
+                //Map<String, Integer> resultMap = resultRetriever.retrieveResult(command, parameter);
+                //System.out.println(resultMap.entrySet());
 
+                // Get summary
+                Map<String, Map<String, Integer>> resultMap = resultRetriever.retrieveSummary(command, ScanType.WEB);
+                System.out.println(resultMap.entrySet());
             }
             case "query" -> {
-
+                if(!(parameter.split("\\|")[1].equals("summary"))){
+                    Map<String, Integer> resultMap = resultRetriever.retrieveResult(command, parameter);
+                    System.out.println(resultMap.entrySet());
+                } else if(parameter.split("\\|")[0].equals("file") && parameter.split("\\|")[1].equals("summary")) {
+                    Map<String, Map<String, Integer>> resultMap = resultRetriever.retrieveSummary(command, ScanType.FILE);
+                    System.out.println(resultMap.entrySet());
+                } else if (parameter.split("\\|")[0].equals("web") && parameter.split("\\|")[1].equals("summary")){
+                    Map<String, Map<String, Integer>> resultMap = resultRetriever.retrieveSummary(command, ScanType.WEB);
+                    System.out.println(resultMap.entrySet());
+                }
             }
             case "cfs" -> {
-
+                try {
+                    resultRetriever.clearSummary(ScanType.FILE);
+                    System.out.println("Clearing file corpus summary ...");
+                    //System.err.println(resultRetriever.getFileSummaryResultsMap());
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             case "cws" -> {
-
+                try {
+                    resultRetriever.clearSummary(ScanType.WEB);
+                    System.out.println("Clearing web corpus summary ...");
+                    //System.err.println(resultRetriever.getWebSummaryResultsMap().entrySet());
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             case "stop" -> {
-
+                try {
+                    System.out.println("Stopping the system ...");
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             default -> {
-                System.out.println("Uneli ste nepostojecu komandu.");
+                System.out.println("You have entered an invalid command.");
             }
         }
     }

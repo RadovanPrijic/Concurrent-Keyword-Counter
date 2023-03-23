@@ -16,12 +16,14 @@ public class WebDomainResultWorker implements Callable<Map<String, Map<String, I
     private Map<String, Map<String, Integer>> webDomainResultsMap;
     private Map<String,Integer> keywordsMap;
 
-    public WebDomainResultWorker(String queryType, String domainName, Map<String, Future<Map<String, Integer>>> webJobResultsMap,
-                                    Map<String, Map<String, Integer>> webDomainResultsMap) {
+    public WebDomainResultWorker(String queryType, String domainName,
+                                 Map<String, Future<Map<String, Integer>>> webJobResultsMap,
+                                 Map<String, Map<String, Integer>> webDomainResultsMap) {
         this.queryType = queryType;
         this.domainName = domainName;
         this.webJobResultsMap = webJobResultsMap;
         this.webDomainResultsMap = webDomainResultsMap;
+        makeKeywordsMap();
     }
 
     @Override

@@ -46,9 +46,13 @@ public class WebScannerWorker implements Callable<Map<String,Integer>> {
             if (hopCount > 0) {
                 for (Element link : links) {
                     String extractedUrl = link.attr("abs:href").trim();
-                    //System.out.println(extractedUrl);
+                    extractedUrl.replaceAll(" ", "%20");
+                    System.err.println("This is the URL: " + extractedUrl);
 
-                    if (urlCache.contains(extractedUrl) && System.currentTimeMillis() - urlCache.get(extractedUrl) < CoreApp.urlRefreshTime)
+                    if ((urlCache.contains(extractedUrl) && System.currentTimeMillis() - urlCache.get(extractedUrl) < CoreApp.urlRefreshTime) ||
+                            !(extractedUrl.startsWith("http")) || !(extractedUrl.startsWith("https")) || extractedUrl.endsWith(".pdf") ||
+                            extractedUrl.endsWith(".jpg") || extractedUrl.endsWith(".png") || extractedUrl.endsWith(".php") ||
+                            extractedUrl.endsWith(".js") || extractedUrl.isBlank())
                         continue;
                     else {
                         urlCache.put(extractedUrl, System.currentTimeMillis());
@@ -59,6 +63,7 @@ public class WebScannerWorker implements Callable<Map<String,Integer>> {
         }
         catch (Exception e) {
             e.printStackTrace();
+            //System.out.println(ex);
         }
         return keywordsMap;
     }

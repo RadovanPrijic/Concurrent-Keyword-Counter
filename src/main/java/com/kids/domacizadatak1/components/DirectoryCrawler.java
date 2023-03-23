@@ -60,10 +60,10 @@ public class DirectoryCrawler implements Runnable {
     public void crawlDirectory(File[] directoryFiles) throws InterruptedException {
         for (File filename : directoryFiles) {
             if (filename.isDirectory()) {
-                System.out.println("Directory: " + filename.getName());
+                //System.out.println("Directory: " + filename.getName());
 
                 if(filename.getName().startsWith(CoreApp.fileCorpusPrefix)){
-                    System.err.println("Corpus: " + filename.getName());
+                    //System.err.println("Corpus: " + filename.getName());
 
                     boolean doTheJob = checkIfCorpusModified(Objects.requireNonNull(filename.listFiles()));
                     if(doTheJob){
@@ -87,11 +87,11 @@ public class DirectoryCrawler implements Runnable {
                 if(!lastModifiedValues.containsKey(filename)){
                     lastModifiedValues.put(filename, filename.lastModified());
                     modified = true;
-                    System.err.println("Text file: " + filename.getName());
+                    //System.err.println("Text file: " + filename.getName());
                 } else if (lastModifiedValues.get(filename) != filename.lastModified()) {
                     lastModifiedValues.put(filename, filename.lastModified());
                     modified = true;
-                    System.err.println("Text file: " + filename.getName());
+                    //System.err.println("Text file: " + filename.getName());
                 }
             }
         }

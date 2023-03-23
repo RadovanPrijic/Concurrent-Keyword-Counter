@@ -4,6 +4,7 @@ import com.kids.domacizadatak1.jobs.FileJob;
 import com.kids.domacizadatak1.jobs.ScanType;
 import com.kids.domacizadatak1.jobs.ScanningJob;
 import com.kids.domacizadatak1.jobs.WebJob;
+import com.kids.domacizadatak1.workers.SummaryResultWorker;
 import com.kids.domacizadatak1.workers.WebDomainResultWorker;
 import com.kids.domacizadatak1.workers.WebScannerWorker;
 
@@ -15,11 +16,12 @@ import java.util.concurrent.*;
 public class ResultRetriever implements ResultRetrieverInterface {
 
     private final ExecutorService resultRetrieverThreadPool = Executors.newCachedThreadPool();
+    private final ExecutorCompletionService<Map<String, Map<String, Integer>>> resultRetrieverCompletionService = new ExecutorCompletionService(resultRetrieverThreadPool);
     private final Map<String, Future<Map<String, Integer>>> fileJobResultsMap = new ConcurrentHashMap<>();
     private final Map<String, Future<Map<String, Integer>>> webJobResultsMap = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Integer>> webDomainResultsMap = new ConcurrentHashMap<>();
-    private final Map<String, Map<String, Integer>> fileSummaryResultsMap = new ConcurrentHashMap<>();
-    private final Map<String, Map<String, Integer>> webSummaryResultsMap = new ConcurrentHashMap<>();
+    private Map<String, Map<String, Integer>> fileSummaryResultsMap = new ConcurrentHashMap<>();
+    private Map<String, Map<String, Integer>> webSummaryResultsMap = new ConcurrentHashMap<>();
 
     @Override
     public Map<String, Integer> retrieveResult(String commandType, String query) {
@@ -42,7 +44,7 @@ public class ResultRetriever implements ResultRetrieverInterface {
                 System.out.println("There is no result for corpus " + parameter + ".");
         } else if (queryType.equals("web")){
             Future<Map<String, Map<String, Integer>>> webJobResult =
-                    this.resultRetrieverThreadPool.submit(new WebDomainResultWorker("get", parameter,
+                    this.resultRetrieverCompletionService.submit(new WebDomainResultWorker("get", parameter,
                                                                                             webJobResultsMap, webDomainResultsMap));
             try {
                 return webJobResult.get().get(parameter);
@@ -55,7 +57,14 @@ public class ResultRetriever implements ResultRetrieverInterface {
 
     @Override
     public Map<String, Map<String, Integer>> retrieveSummary(String commandType, ScanType summaryType) {
-
+        Future<Map<String, Map<String, Integer>>> jobResult =
+                this.resultRetrieverCompletionService.submit(new SummaryResultWorker(commandType, summaryType, fileJobResultsMap,
+                        webJobResultsMap, webDomainResultsMap, fileSummaryResultsMap, webSummaryResultsMap));
+        try {
+            return jobResult.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -90,5 +99,25 @@ public class ResultRetriever implements ResultRetrieverInterface {
                 webDomainResultsMap.put(extractedDomainName, null);
             }
         }
+    }
+
+    public Map<String, Future<Map<String, Integer>>> getFileJobResultsMap() {
+        return fileJobResultsMap;
+    }
+
+    public Map<String, Future<Map<String, Integer>>> getWebJobResultsMap() {
+        return webJobResultsMap;
+    }
+
+    public Map<String, Map<String, Integer>> getWebDomainResultsMap() {
+        return webDomainResultsMap;
+    }
+
+    public Map<String, Map<String, Integer>> getFileSummaryResultsMap() {
+        return fileSummaryResultsMap;
+    }
+
+    public Map<String, Map<String, Integer>> getWebSummaryResultsMap() {
+        return webSummaryResultsMap;
     }
 }

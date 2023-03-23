@@ -23,7 +23,6 @@ public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
 
         if(textFiles.size() == 0){
             countKeywords(breakawayFiles);
-            return keywordsMap;
         } else {
             FileScannerWorker left = new FileScannerWorker(textFiles);
             FileScannerWorker right = new FileScannerWorker(breakawayFiles);
@@ -36,8 +35,8 @@ public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
                 Integer newCountValue = entry.getValue() + leftKeywordCountMap.get(entry.getKey()) + rightKeywordCountMap.get(entry.getKey());
                 keywordsMap.put(entry.getKey(), newCountValue);
             }
-            return keywordsMap;
         }
+        return keywordsMap;
     }
 
     private List<File> divideFileList(List<File> textFiles) {

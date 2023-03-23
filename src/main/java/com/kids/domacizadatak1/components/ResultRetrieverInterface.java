@@ -8,10 +8,8 @@ import java.util.concurrent.Future;
 
 public interface ResultRetrieverInterface {
     public void addCorpusResult(ScanningJob job, Future<Map<String, Integer>> corpusResult);
-    public Map<String, Integer> getResult(String query);
-    public Map<String, Integer> queryResult(String query);
-    public Map<String, Map<String, Integer>> getSummary(ScanType summaryType);
-    public Map<String, Map<String, Integer>> querySummary(ScanType summaryType);
+    public Map<String, Integer> retrieveResult(String commandType, String query);
+    public Map<String, Map<String, Integer>> retrieveSummary(String commandType, ScanType summaryType);
     public void clearSummary(ScanType summaryType);
 
 }

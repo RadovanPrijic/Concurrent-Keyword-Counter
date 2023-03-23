@@ -8,7 +8,6 @@ import com.kids.domacizadatak1.components.JobDispatcher;
 import com.kids.domacizadatak1.jobs.FileJob;
 import com.kids.domacizadatak1.jobs.ScanningJob;
 import com.kids.domacizadatak1.jobs.WebJob;
-import com.kids.domacizadatak1.results.Result;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

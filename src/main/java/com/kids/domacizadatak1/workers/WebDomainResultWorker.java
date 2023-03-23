@@ -1,79 +1,77 @@
 package com.kids.domacizadatak1.workers;
 
+import com.kids.domacizadatak1.CoreApp;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 public class WebDomainResultWorker implements Callable<Map<String, Map<String, Integer>>> {
 
+    private String queryType;
+    private String domainName;
     private Map<String, Future<Map<String, Integer>>> webJobResultsMap;
-    private Map<String, Future<Map<String, Integer>>> webDomainResultsMap;
+    private Map<String, Map<String, Integer>> webDomainResultsMap;
+    private Map<String,Integer> keywordsMap;
 
-    public WebDomainResultWorker(Map<String, Future<Map<String, Integer>>> webJobResultsMap,
-                                    Map<String, Future<Map<String, Integer>>> webDomainResultsMap) {
+    public WebDomainResultWorker(String queryType, String domainName, Map<String, Future<Map<String, Integer>>> webJobResultsMap,
+                                    Map<String, Map<String, Integer>> webDomainResultsMap) {
+        this.queryType = queryType;
+        this.domainName = domainName;
         this.webJobResultsMap = webJobResultsMap;
         this.webDomainResultsMap = webDomainResultsMap;
     }
 
     @Override
     public Map<String, Map<String, Integer>> call() throws Exception {
-        return null;
+        Map<String, Map<String, Integer>> resultMap = new ConcurrentHashMap<>();
+        boolean flag = false;
+
+        if(webDomainResultsMap.get(domainName) != null){
+            resultMap.put(domainName, webDomainResultsMap.get(domainName));
+            return resultMap;
+        }
+
+        for (String key : webJobResultsMap.keySet()) {
+            try {
+                URL url = new URL(key);
+                String host = url.getHost();
+                String extractedDomainName = host.startsWith("www.") ? host.substring(4) : host;
+
+                if (domainName.equals(extractedDomainName)) {
+                    flag = true;
+                    if (queryType.equals("query")) {
+                        if (!webJobResultsMap.get(key).isDone()) {
+                            System.out.println("The result for corpus " + domainName + " is still being calculated.");
+                            return null;
+                        }
+                    }
+                    for (Map.Entry<String,Integer> entry : keywordsMap.entrySet()) {
+                        Integer newCountValue = entry.getValue() + webJobResultsMap.get(key).get().get(entry.getKey());
+                        keywordsMap.put(entry.getKey(), newCountValue);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (!flag) {
+            System.out.println("There is no result for corpus " + domainName + ".");
+            return null;
+        }
+        webDomainResultsMap.put(domainName, keywordsMap);
+        resultMap.put(domainName, keywordsMap);
+        return resultMap;
     }
 
-    /*
-        else if (fileWebToken.equals("web")) {
-
-			Map<String, Map<String, Integer>> resultMap = new ConcurrentHashMap<>();
-
-			if (domainWebResults.get(pathToken) != null) {
-				resultMap.put(pathToken, domainWebResults.get(pathToken));
-				if (queryGetToken.equals("query")) {
-					System.out.println(resultMap);
-				}
-				return resultMap;
-			}
-
-			Map<String, Integer> domainSumMap = new ConcurrentHashMap<>();
-
-			boolean domainExists = false;
-			for (String key : webPageResults.keySet()) {
-				try {
-					URL url = new URL(key);
-					String domain = url.getHost();
-					if (pathToken.equals(domain)) {
-						domainExists = true;
-						if (queryGetToken.equals("query")) {
-							if (! webPageResults.get(key).isDone()) {
-								System.out.println(domain + " isn't done...");
-								return null;
-							}
-						}
-
-						domainSumMap = Stream.concat(domainSumMap.entrySet().stream(), webPageResults.get(key).get().entrySet().stream())
-									.collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingInt(Map.Entry::getValue)));
-
-					}
-				} catch (MalformedURLException | InterruptedException | ExecutionException e) {
-					System.err.println(key + " {" + e.getMessage() +"}");
-				}
-			}
-
-			if (! domainExists) {
-				System.out.println("Domain {" + pathToken + "} doesn't exist.");
-				return null;
-			}
-
-			domainWebResults.put(pathToken, domainSumMap);
-
-
-			resultMap.put(pathToken, domainSumMap);
-
-			if (queryGetToken.equals("query")) {
-				System.out.println(resultMap);
-			}
-
-			return resultMap;
-
-		}
-        */
+    public void makeKeywordsMap() {
+        this.keywordsMap = new ConcurrentHashMap<>();
+        String[] keywordsArr = CoreApp.keywords.split(",");
+        for (String keyword : keywordsArr)
+            keywordsMap.put(keyword, 0);
+    }
 }

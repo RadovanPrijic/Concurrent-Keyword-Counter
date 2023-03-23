@@ -13,18 +13,14 @@ public class FileScanner implements Runnable {
 
     private BlockingQueue<FileJob> fileScannerJobQueue;
     private BlockingQueue<Result> resultQueue;
-    private ExecutorService fileScannerThreadPool;
-    private ExecutorCompletionService<Map<String, Integer>> fileScannerResults;
-    private String keywords;
-    private Integer fileScanningSizeLimit;
+    private final ExecutorService fileScannerThreadPool;
+    private final ExecutorCompletionService<Map<String, Integer>> fileScannerResults;
 
-    public FileScanner(BlockingQueue<FileJob> fileScannerJobQueue, BlockingQueue<Result> resultQueue, String keywords, Integer fileScanningSizeLimit) {
+    public FileScanner(BlockingQueue<FileJob> fileScannerJobQueue, BlockingQueue<Result> resultQueue) {
         this.fileScannerJobQueue = fileScannerJobQueue;
         this.resultQueue = resultQueue;
         this.fileScannerThreadPool = new ForkJoinPool();
         this.fileScannerResults = new ExecutorCompletionService<>(this.fileScannerThreadPool);
-        this.keywords = keywords;
-        this.fileScanningSizeLimit = fileScanningSizeLimit;
     }
 
     @Override
@@ -32,8 +28,6 @@ public class FileScanner implements Runnable {
         while (true) {
             try {
                 FileJob fileJob = this.fileScannerJobQueue.take();
-                fileJob.setKeywords(keywords);
-                fileJob.setFileScanningSizeLimit(fileScanningSizeLimit);
                 fileJob.setForkJoinPool((ForkJoinPool) fileScannerThreadPool);
                 fileJob.initiate();
                 //TODO Slanje ResultRetriever-u rezultata iz initiate metoda
@@ -41,7 +35,5 @@ public class FileScanner implements Runnable {
                 e.printStackTrace();
             }
         }
-        //TODO Thread pool shutdown
     }
-
 }

@@ -6,24 +6,25 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class WebJob implements ScanningJob {
-    private ScanType scanType;
-    private String query;
-    private String url;
-    private String keywords;
-    private Integer hopCount;
-    private Integer urlRefreshTime;
-    private Future<Map<String,Integer>> webJobResult;
-    private ExecutorService cachedThreadPool;
 
-    public WebJob(String query, String url) {
+    private final ScanType scanType;
+    private final String query;
+    private final String url;
+    private final Integer hopCount;
+    private BlockingQueue<ScanningJob> jobQueue;
+    private ExecutorService cachedThreadPool;
+    private ConcurrentHashMap<String, Long> urlCache;
+
+    public WebJob(String url, Integer hopCount) {
         this.scanType = ScanType.WEB;
-        this.query = "web|" + url.split("\\.")[1];
+        this.query = "web|" + url;
         this.url = url;
+        this.hopCount = hopCount;
     }
 
     @Override
-    public Future<Map<String,Integer>> initiate() {
-        webJobResult = this.cachedThreadPool.submit(new WebScannerWorker(keywords, url, hopCount, urlRefreshTime));
+    public Future<Map<String, Integer>> initiate() {
+        Future<Map<String, Integer>> webJobResult = this.cachedThreadPool.submit(new WebScannerWorker(url, hopCount, jobQueue, urlCache));
         try {
             System.out.println(webJobResult.get());
         } catch (InterruptedException | ExecutionException e) {
@@ -42,19 +43,15 @@ public class WebJob implements ScanningJob {
         return this.query;
     }
 
-    public void setKeywords(String keywords) {
-        this.keywords = keywords;
-    }
-
-    public void setHopCount(Integer hopCount) {
-        this.hopCount = hopCount;
-    }
-
-    public void setUrlRefreshTime(Integer urlRefreshTime) {
-        this.urlRefreshTime = urlRefreshTime;
+    public void setJobQueue(BlockingQueue<ScanningJob> jobQueue) {
+        this.jobQueue = jobQueue;
     }
 
     public void setCachedThreadPool(ExecutorService cachedThreadPool) {
         this.cachedThreadPool = cachedThreadPool;
+    }
+
+    public void setUrlCache(ConcurrentHashMap<String, Long> urlCache) {
+        this.urlCache = urlCache;
     }
 }

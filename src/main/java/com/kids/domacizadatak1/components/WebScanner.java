@@ -9,25 +9,20 @@ import java.util.concurrent.*;
 
 public class WebScanner implements Runnable {
 
-    private BlockingQueue<ScanningJob> jobQueue;
     private BlockingQueue<WebJob> webScannerJobQueue;
+    private BlockingQueue<ScanningJob> jobQueue;
     private BlockingQueue<Result> resultQueue;
-    private ExecutorService webScannerThreadPool;
-    private ExecutorCompletionService<Map<String, Integer>> webScannerResults;
-    private String keywords;
-    private Integer hopCount;
-    private Integer urlRefreshTime;
+    private final ExecutorService webScannerThreadPool;
+    private final ConcurrentHashMap<String, Long> urlCache;
+    private final ExecutorCompletionService<Map<String, Integer>> webScannerResults;
 
-    public WebScanner(BlockingQueue<ScanningJob> jobQueue, BlockingQueue<WebJob> webScannerJobQueue, BlockingQueue<Result> resultQueue,
-                        String keywords, Integer hopCount, Integer urlRefreshTime) {
+    public WebScanner(BlockingQueue<WebJob> webScannerJobQueue, BlockingQueue<ScanningJob> jobQueue, BlockingQueue<Result> resultQueue) {
         this.jobQueue = jobQueue;
         this.webScannerJobQueue = webScannerJobQueue;
         this.resultQueue = resultQueue;
         this.webScannerThreadPool = Executors.newCachedThreadPool();
+        this.urlCache = new ConcurrentHashMap<>();
         this.webScannerResults = new ExecutorCompletionService<>(this.webScannerThreadPool);
-        this.keywords = keywords;
-        this.hopCount = hopCount;
-        this.urlRefreshTime = urlRefreshTime;
     }
 
     @Override
@@ -35,16 +30,14 @@ public class WebScanner implements Runnable {
         while (true) {
             try {
                 WebJob webJob = this.webScannerJobQueue.take();
-                webJob.setKeywords(keywords);
-                webJob.setHopCount(hopCount);
-                webJob.setUrlRefreshTime(urlRefreshTime);
+                webJob.setJobQueue(jobQueue);
                 webJob.setCachedThreadPool(webScannerThreadPool);
+                webJob.setUrlCache(urlCache);
                 webJob.initiate();
                 //TODO Slanje ResultRetriever-u rezultata iz initiate metoda
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        //TODO Thread pool shutdown
     }
 }

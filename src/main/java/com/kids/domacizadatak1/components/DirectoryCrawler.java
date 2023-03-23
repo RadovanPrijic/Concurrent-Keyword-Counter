@@ -1,6 +1,7 @@
 package com.kids.domacizadatak1.components;
 
 
+import com.kids.domacizadatak1.CoreApp;
 import com.kids.domacizadatak1.jobs.FileJob;
 import com.kids.domacizadatak1.jobs.ScanningJob;
 
@@ -14,19 +15,13 @@ public class DirectoryCrawler implements Runnable {
 
     private CopyOnWriteArrayList<String> directoriesToCrawl;
     private BlockingQueue<ScanningJob> jobQueue;
-    private HashMap<File, Long> lastModifiedValues = new HashMap<>();
-    private Integer dirCrawlerSleepTime;
-    private String prefix;
-    private boolean doTheJob = true;
+    private final HashMap<File, Long> lastModifiedValues;
 
-    public DirectoryCrawler(CopyOnWriteArrayList<String> directoriesToCrawl, BlockingQueue<ScanningJob> jobQueue, Integer dirCrawlerSleepTime,
-                                String prefix) {
+    public DirectoryCrawler(CopyOnWriteArrayList<String> directoriesToCrawl, BlockingQueue<ScanningJob> jobQueue) {
         this.directoriesToCrawl = directoriesToCrawl;
         this.jobQueue = jobQueue;
-        this.dirCrawlerSleepTime = dirCrawlerSleepTime;
-        this.prefix = prefix;
-
-        this.directoriesToCrawl.add("D:\\kids-domaci-zadatak-1\\test_example");
+        this.lastModifiedValues = new HashMap<>();
+        //this.directoriesToCrawl.add("D:\\kids-domaci-zadatak-1\\test_example");
     }
 
     @Override
@@ -55,7 +50,7 @@ public class DirectoryCrawler implements Runnable {
                 readyToCrawl = false;
             }
             try {
-                Thread.sleep(dirCrawlerSleepTime);
+                Thread.sleep(CoreApp.dirCrawlerSleepTime);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -67,19 +62,17 @@ public class DirectoryCrawler implements Runnable {
             if (filename.isDirectory()) {
                 System.out.println("Directory: " + filename.getName());
 
-                if(filename.getName().startsWith(prefix)){
-                    System.err.println("CORPUS: " + filename.getName());
+                if(filename.getName().startsWith(CoreApp.fileCorpusPrefix)){
+                    System.err.println("Corpus: " + filename.getName());
 
-                    doTheJob = checkIfCorpusModified(Objects.requireNonNull(filename.listFiles()));
+                    boolean doTheJob = checkIfCorpusModified(Objects.requireNonNull(filename.listFiles()));
                     if(doTheJob){
                         try {
                             jobQueue.put(new FileJob(filename));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            continue;
                         }
                     }
-                    doTheJob = true;
                 } else {
                     crawlDirectory(Objects.requireNonNull(filename.listFiles()));
                 }

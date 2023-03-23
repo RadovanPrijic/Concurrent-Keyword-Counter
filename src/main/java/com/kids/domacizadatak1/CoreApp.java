@@ -13,14 +13,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.*;
-import java.util.HashMap;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @SpringBootApplication
-public class DomaciZadatak1Application {
+public class CoreApp {
 
     private static DirectoryCrawler directoryCrawler;
     private static JobDispatcher jobDispatcher;
@@ -28,12 +28,12 @@ public class DomaciZadatak1Application {
     private static WebScanner webScanner;
     private static ResultRetriever resultRetriever;
 
-    private static String keywords;
-    private static String fileCorpusPrefix;
-    private static Integer dirCrawlerSleepTime;
-    private static Integer fileScanningSizeLimit;
-    private static Integer hopCount;
-    private static Integer urlRefreshTime;
+    public static String keywords;
+    public static String fileCorpusPrefix;
+    public static Integer dirCrawlerSleepTime;
+    public static Integer fileScanningSizeLimit;
+    public static Integer hopCount;
+    public static Integer urlRefreshTime;
 
     public static final CopyOnWriteArrayList<String> directoriesToCrawl = new CopyOnWriteArrayList<>();
     public static final BlockingQueue<ScanningJob> jobQueue = new LinkedBlockingQueue<>();
@@ -41,11 +41,11 @@ public class DomaciZadatak1Application {
     public static final BlockingQueue<WebJob> webScannerJobQueue = new LinkedBlockingQueue<>();
     public static final BlockingQueue<Result> resultQueue = new LinkedBlockingQueue<>();
 
-    public static void main(String[] args) throws IOException {
-        SpringApplication.run(DomaciZadatak1Application.class, args);
+    public static void main(String[] args) throws IOException, InterruptedException {
+        SpringApplication.run(CoreApp.class, args);
 
-        setPropertyVariables("src/main/resources/application.properties");
-        initalizeComponents();
+        setPropertyVariables();
+        initializeComponents();
 
         while(true) {
             Scanner scanner = new Scanner(System.in);
@@ -54,8 +54,8 @@ public class DomaciZadatak1Application {
         }
     }
 
-    public static void initalizeComponents(){
-        directoryCrawler = new DirectoryCrawler(directoriesToCrawl, jobQueue, dirCrawlerSleepTime, fileCorpusPrefix);
+    public static void initializeComponents() throws InterruptedException {
+        directoryCrawler = new DirectoryCrawler(directoriesToCrawl, jobQueue);
         Thread directoryCrawlerThread = new Thread(directoryCrawler);
         directoryCrawlerThread.start();
 
@@ -63,37 +63,35 @@ public class DomaciZadatak1Application {
         Thread jobDispatcherThread = new Thread(jobDispatcher);
         jobDispatcherThread.start();
 
-        fileScanner = new FileScanner(fileScannerJobQueue, resultQueue, keywords, fileScanningSizeLimit);
+        fileScanner = new FileScanner(fileScannerJobQueue, resultQueue);
         Thread fileScannerThread = new Thread(fileScanner);
         fileScannerThread.start();
 
-        webScanner = new WebScanner(jobQueue, webScannerJobQueue, resultQueue, keywords, hopCount, urlRefreshTime);
+        webScanner = new WebScanner(webScannerJobQueue, jobQueue, resultQueue);
         Thread webScannerThread = new Thread(webScanner);
         webScannerThread.start();
 
         resultRetriever = new ResultRetriever(resultQueue);
         Thread resultRetrieverThread = new Thread(resultRetriever);
         resultRetrieverThread.start();
+
+        //ScanningJob webJob = new WebJob("https://www.gatesnotes.com/2019-Annual-Letter", hopCount);
+        //jobQueue.put(webJob);
     }
 
-    public static void setPropertyVariables(String propertiesFilePath) throws IOException {
-        File file = new File(propertiesFilePath);
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String line;
-        while ((line = br.readLine()) != null){
-            if(line.startsWith("keywords=")){
-                keywords = line.split("=")[1];
-            } else if (line.startsWith("file.corpus.prefix=")){
-                fileCorpusPrefix = line.split("=")[1];
-            } else if (line.startsWith("dir.crawler.sleep.time=")){
-                dirCrawlerSleepTime = Integer.parseInt(line.split("=")[1]);
-            } else if (line.startsWith("file.scanning.size.limit=")){
-                fileScanningSizeLimit = Integer.parseInt(line.split("=")[1]);
-            } else if (line.startsWith("hop.count=")){
-                hopCount = Integer.parseInt(line.split("=")[1]);
-            } else if (line.startsWith("url.refresh.time="))
-                urlRefreshTime = Integer.parseInt(line.split("=")[1]);
-        }
+    public static void setPropertyVariables() throws IOException {
+        String rootPath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
+        String appConfigPath = rootPath + "application.properties";
+
+        Properties appProperties = new Properties();
+        appProperties.load(new FileInputStream(appConfigPath));
+
+        keywords = appProperties.getProperty("keywords");
+        fileCorpusPrefix = appProperties.getProperty("file_corpus_prefix");
+        dirCrawlerSleepTime = Integer.parseInt(appProperties.getProperty("dir_crawler_sleep_time"));
+        fileScanningSizeLimit = Integer.parseInt(appProperties.getProperty("file_scanning_size_limit"));
+        hopCount = Integer.parseInt(appProperties.getProperty("hop_count"));
+        urlRefreshTime = Integer.parseInt(appProperties.getProperty("url_refresh_time"));
     }
 
     public static void writeCommand(String userInput){
@@ -103,7 +101,8 @@ public class DomaciZadatak1Application {
         if(userInput.split(" ").length > 1 ){
             command = userInput.split(" ")[0];
             parameter = userInput.split(" ")[1];
-        }
+        } else
+            command = userInput;
 
         if(command.equals("ad")){
 
@@ -118,7 +117,7 @@ public class DomaciZadatak1Application {
         } else if (command.equals("cws")){
 
         } else if (command.equals("stop")){
-            //TODO Pravilno obustavljanje programa (zatvaranje thread pool-ova, poison pills, itd.)
+
             System.exit(0);
         } else
             System.out.println("Uneli ste nepostojecu komandu.");

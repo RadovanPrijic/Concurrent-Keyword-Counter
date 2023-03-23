@@ -33,6 +33,9 @@ public class JobDispatcher implements Runnable {
                     WebJob webJob = (WebJob) jobToDo;
                     webScannerJobQueue.add(webJob);
                 }
+                else if (jobToDo.getType() == ScanType.POISON) {
+                    break; //TODO Ovde ubiti sve ili vecinu procesa
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

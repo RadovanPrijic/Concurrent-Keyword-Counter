@@ -13,12 +13,14 @@ public class FileJob implements ScanningJob{
 
     private final ScanType scanType;
     private final String query;
+    private final String corpusDirectoryName;
     private List<File> textFiles;
     private ForkJoinPool forkJoinPool;
 
     public FileJob(File corpusDirectory) {
         this.scanType = ScanType.FILE;
         this.query = "file|" + corpusDirectory.getName();
+        this.corpusDirectoryName = corpusDirectory.getName();
         setFilesToAnalyse(corpusDirectory);
     }
 
@@ -49,6 +51,10 @@ public class FileJob implements ScanningJob{
     @Override
     public String getQuery() {
         return this.query;
+    }
+
+    public String getCorpusDirectoryName() {
+        return corpusDirectoryName;
     }
 
     public void setForkJoinPool(ForkJoinPool forkJoinPool) {

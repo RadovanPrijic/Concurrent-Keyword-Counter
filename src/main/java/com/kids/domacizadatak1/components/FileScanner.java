@@ -1,24 +1,19 @@
 package com.kids.domacizadatak1.components;
 
+import com.kids.domacizadatak1.CoreApp;
 import com.kids.domacizadatak1.jobs.FileJob;
-import com.kids.domacizadatak1.results.Result;
 
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.*;
 
 public class FileScanner implements Runnable {
 
     private BlockingQueue<FileJob> fileScannerJobQueue;
-    private BlockingQueue<Result> resultQueue;
     private final ExecutorService fileScannerThreadPool;
     private final ExecutorCompletionService<Map<String, Integer>> fileScannerResults;
 
-    public FileScanner(BlockingQueue<FileJob> fileScannerJobQueue, BlockingQueue<Result> resultQueue) {
+    public FileScanner(BlockingQueue<FileJob> fileScannerJobQueue) {
         this.fileScannerJobQueue = fileScannerJobQueue;
-        this.resultQueue = resultQueue;
         this.fileScannerThreadPool = new ForkJoinPool();
         this.fileScannerResults = new ExecutorCompletionService<>(this.fileScannerThreadPool);
     }
@@ -29,8 +24,8 @@ public class FileScanner implements Runnable {
             try {
                 FileJob fileJob = this.fileScannerJobQueue.take();
                 fileJob.setForkJoinPool((ForkJoinPool) fileScannerThreadPool);
-                fileJob.initiate();
-                //TODO Slanje ResultRetriever-u rezultata iz initiate metoda
+                Future<Map<String, Integer>> fileJobResult = fileJob.initiate();
+                CoreApp.getResultRetriever().addCorpusResult(fileJob, fileJobResult);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

@@ -43,6 +43,10 @@ public class WebJob implements ScanningJob {
         return this.query;
     }
 
+    public String getUrl() {
+        return url;
+    }
+
     public void setJobQueue(BlockingQueue<ScanningJob> jobQueue) {
         this.jobQueue = jobQueue;
     }

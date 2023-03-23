@@ -39,7 +39,6 @@ public class CoreApp {
     public static final BlockingQueue<ScanningJob> jobQueue = new LinkedBlockingQueue<>();
     public static final BlockingQueue<FileJob> fileScannerJobQueue = new LinkedBlockingQueue<>();
     public static final BlockingQueue<WebJob> webScannerJobQueue = new LinkedBlockingQueue<>();
-    public static final BlockingQueue<Result> resultQueue = new LinkedBlockingQueue<>();
 
     public static void main(String[] args) throws IOException, InterruptedException {
         SpringApplication.run(CoreApp.class, args);
@@ -63,17 +62,15 @@ public class CoreApp {
         Thread jobDispatcherThread = new Thread(jobDispatcher);
         jobDispatcherThread.start();
 
-        fileScanner = new FileScanner(fileScannerJobQueue, resultQueue);
+        fileScanner = new FileScanner(fileScannerJobQueue);
         Thread fileScannerThread = new Thread(fileScanner);
         fileScannerThread.start();
 
-        webScanner = new WebScanner(webScannerJobQueue, jobQueue, resultQueue);
+        webScanner = new WebScanner(webScannerJobQueue, jobQueue);
         Thread webScannerThread = new Thread(webScanner);
         webScannerThread.start();
 
-        resultRetriever = new ResultRetriever(resultQueue);
-        Thread resultRetrieverThread = new Thread(resultRetriever);
-        resultRetrieverThread.start();
+        resultRetriever = new ResultRetriever();
 
         //ScanningJob webJob = new WebJob("https://www.gatesnotes.com/2019-Annual-Letter", hopCount);
         //jobQueue.put(webJob);
@@ -106,20 +103,38 @@ public class CoreApp {
 
         if(command.equals("ad")){
 
-        } else if (command.equals("aw")){
+        }
 
-        } else if (command.equals("get")){
+        else if (command.equals("aw")){
 
-        } else if (command.equals("query")){
+        }
 
-        } else if (command.equals("cfs")){
+        else if (command.equals("get")){
 
-        } else if (command.equals("cws")){
+        }
 
-        } else if (command.equals("stop")){
+        else if (command.equals("query")){
+
+        }
+
+        else if (command.equals("cfs")){
+
+        }
+
+        else if (command.equals("cws")){
+
+        }
+
+        else if (command.equals("stop")){
 
             System.exit(0);
-        } else
+        }
+
+        else
             System.out.println("Uneli ste nepostojecu komandu.");
+    }
+
+    public static ResultRetriever getResultRetriever() {
+        return resultRetriever;
     }
 }

@@ -2,13 +2,11 @@ package com.kids.domacizadatak1.workers;
 
 import com.kids.domacizadatak1.CoreApp;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.stream.Stream;
 
 public class WebDomainResultWorker implements Callable<Map<String, Map<String, Integer>>> {
 

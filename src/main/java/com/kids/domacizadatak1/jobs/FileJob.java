@@ -27,11 +27,13 @@ public class FileJob implements ScanningJob{
     @Override
     public Future<Map<String, Integer>> initiate() {
         Future<Map<String, Integer>> fileJobResult = this.forkJoinPool.submit(new FileScannerWorker(textFiles));
+        /*
         try {
             System.out.println(fileJobResult.get());
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+        */
         return fileJobResult;
     }
 

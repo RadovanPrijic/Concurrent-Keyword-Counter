@@ -100,37 +100,32 @@ public class CoreApp {
         } else
             command = userInput;
 
-        if(command.equals("ad")){
+        switch (command) {
+            case "ad" -> {
 
+            }
+            case "aw" -> {
+
+            }
+            case "get" -> {
+
+            }
+            case "query" -> {
+
+            }
+            case "cfs" -> {
+
+            }
+            case "cws" -> {
+
+            }
+            case "stop" -> {
+
+            }
+            default -> {
+                System.out.println("Uneli ste nepostojecu komandu.");
+            }
         }
-
-        else if (command.equals("aw")){
-
-        }
-
-        else if (command.equals("get")){
-
-        }
-
-        else if (command.equals("query")){
-
-        }
-
-        else if (command.equals("cfs")){
-
-        }
-
-        else if (command.equals("cws")){
-
-        }
-
-        else if (command.equals("stop")){
-
-            System.exit(0);
-        }
-
-        else
-            System.out.println("Uneli ste nepostojecu komandu.");
     }
 
     public static ResultRetriever getResultRetriever() {

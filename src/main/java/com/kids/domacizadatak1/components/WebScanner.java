@@ -13,14 +13,12 @@ public class WebScanner implements Runnable {
     private BlockingQueue<ScanningJob> jobQueue;
     private final ExecutorService webScannerThreadPool;
     private final ConcurrentHashMap<String, Long> urlCache;
-    private final ExecutorCompletionService<Map<String, Integer>> webScannerResults;
 
     public WebScanner(BlockingQueue<WebJob> webScannerJobQueue, BlockingQueue<ScanningJob> jobQueue) {
         this.jobQueue = jobQueue;
         this.webScannerJobQueue = webScannerJobQueue;
         this.webScannerThreadPool = Executors.newCachedThreadPool();
         this.urlCache = new ConcurrentHashMap<>();
-        this.webScannerResults = new ExecutorCompletionService<>(this.webScannerThreadPool);
     }
 
     @Override

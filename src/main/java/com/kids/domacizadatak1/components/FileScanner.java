@@ -10,12 +10,10 @@ public class FileScanner implements Runnable {
 
     private BlockingQueue<FileJob> fileScannerJobQueue;
     private final ExecutorService fileScannerThreadPool;
-    private final ExecutorCompletionService<Map<String, Integer>> fileScannerResults;
 
     public FileScanner(BlockingQueue<FileJob> fileScannerJobQueue) {
         this.fileScannerJobQueue = fileScannerJobQueue;
         this.fileScannerThreadPool = new ForkJoinPool();
-        this.fileScannerResults = new ExecutorCompletionService<>(this.fileScannerThreadPool);
     }
 
     @Override

@@ -35,13 +35,10 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
     @Override
     public Map<String, Map<String, Integer>> call() throws Exception {
         if(summaryType == ScanType.FILE){
-            if(!fileSummaryResultsMap.isEmpty())
-                return fileSummaryResultsMap;
-
             if(queryType.equals("query")){
                 for(String key : fileJobResultsMap.keySet()){
                     if (!fileJobResultsMap.get(key).isDone()) {
-                        System.out.println("The requested summary could not be provided because some of the results are still being calculated.");
+                        System.err.println("The requested summary could not be provided because some of the results are still being calculated.");
                         return null;
                     }
                     fileSummaryResultsMap.put(key, fileJobResultsMap.get(key).get());
@@ -54,9 +51,6 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
             return fileSummaryResultsMap;
 
         } else if (summaryType == ScanType.WEB){
-            if(!webSummaryResultsMap.isEmpty())
-                return  webSummaryResultsMap;
-
             for (String key : webJobResultsMap.keySet()) {
                 try {
                     URL url = new URL(key);
@@ -65,12 +59,13 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
 
                     if (webSummaryResultsMap.get(extractedDomainName) == null) {
                         if (queryType.equals("query")) {
-                            if (!webJobResultsMap.get(key).isDone()) {
-                                System.out.println("The requested summary could not be provided because some of the results are still being calculated.");
+                            if (webJobResultsMap.get(key) != null && !webJobResultsMap.get(key).isDone()) {
+                                System.err.println("The requested summary could not be provided because some of the results are still being calculated.");
                                 return null;
                             }
                         }
-                        webSummaryResultsMap.put(extractedDomainName, webJobResultsMap.get(key).get());
+                        if(webJobResultsMap.get(key).get() != null)
+                            webSummaryResultsMap.put(extractedDomainName, webJobResultsMap.get(key).get());
                     } else {
                         Map<String, Integer> domainKeywordMap = webSummaryResultsMap.get(extractedDomainName);
                         for (Map.Entry<String,Integer> entry : domainKeywordMap.entrySet()) {

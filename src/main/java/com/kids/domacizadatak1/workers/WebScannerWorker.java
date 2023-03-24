@@ -32,39 +32,39 @@ public class WebScannerWorker implements Callable<Map<String,Integer>> {
 
     @Override
     public Map<String, Integer> call() throws Exception {
+        Document doc = null;
         try {
-            Document doc = Jsoup.connect(url).get();
-            Elements links = doc.select("a[href]");;
-
-            String words[] = doc.text().split("\\s+");
-            for (String word : words) {
-                if(keywordsMap.containsKey(word)){
-                    keywordsMap.put(word, keywordsMap.get(word) + 1);
-                }
-            }
-
-            if (hopCount > 0) {
-                for (Element link : links) {
-                    String extractedUrl = link.attr("abs:href").trim();
-                    extractedUrl.replaceAll(" ", "%20");
-                    System.err.println("This is the URL: " + extractedUrl);
-
-                    if ((urlCache.contains(extractedUrl) && System.currentTimeMillis() - urlCache.get(extractedUrl) < CoreApp.urlRefreshTime) ||
-                            !(extractedUrl.startsWith("http")) || !(extractedUrl.startsWith("https")) || extractedUrl.endsWith(".pdf") ||
-                            extractedUrl.endsWith(".jpg") || extractedUrl.endsWith(".png") || extractedUrl.endsWith(".php") ||
-                            extractedUrl.endsWith(".js") || extractedUrl.isBlank())
-                        continue;
-                    else {
-                        urlCache.put(extractedUrl, System.currentTimeMillis());
-                        jobQueue.add(new WebJob(extractedUrl, hopCount - 1));
-                    }
-                }
-            }
+            doc = Jsoup.connect(url).get();
         }
         catch (Exception e) {
-            e.printStackTrace();
-            //System.out.println(ex);
+            System.err.println("URL address " + url + " could not be scanned.");
+            return null;
         }
+        Elements links = doc.select("a[href]");;
+
+        String[] words = doc.text().split("\\s+");
+        for (String word : words) {
+            if(keywordsMap.containsKey(word)){
+                keywordsMap.put(word, keywordsMap.get(word) + 1);
+            }
+        }
+        if (hopCount > 0) {
+            for (Element link : links) {
+                String extractedUrl = link.attr("abs:href").trim();
+                extractedUrl.replaceAll(" ", "%20");
+                //System.err.println("URL address to be scanned: " + extractedUrl);
+
+                if ((urlCache.contains(extractedUrl) && System.currentTimeMillis() - urlCache.get(extractedUrl) < CoreApp.urlRefreshTime) ||
+                        !(extractedUrl.startsWith("http")) || !(extractedUrl.startsWith("https")) || extractedUrl.endsWith(".pdf") ||
+                        extractedUrl.endsWith(".jpg") || extractedUrl.endsWith(".png") || extractedUrl.endsWith(".php") ||
+                        extractedUrl.endsWith(".js") || extractedUrl.isBlank())
+                    continue;
+                else {
+                    jobQueue.add(new WebJob(extractedUrl, hopCount - 1));
+                }
+            }
+        }
+        urlCache.put(url, System.currentTimeMillis());
         return keywordsMap;
     }
 

@@ -28,8 +28,8 @@ public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
             FileScannerWorker right = new FileScannerWorker(breakawayFiles);
 
             left.fork();
-            Map<String,Integer> leftKeywordCountMap = right.compute();
-            Map<String,Integer> rightKeywordCountMap = left.join();
+            Map<String,Integer> rightKeywordCountMap = right.compute();
+            Map<String,Integer> leftKeywordCountMap = left.join();
 
             for (Map.Entry<String,Integer> entry : keywordsMap.entrySet()) {
                 Integer newCountValue = entry.getValue() + leftKeywordCountMap.get(entry.getKey()) + rightKeywordCountMap.get(entry.getKey());
@@ -56,12 +56,11 @@ public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
     }
 
     public void countKeywords(List<File> files){
-        for (File filename : files) {
-            //System.err.println("File to analyse: " + filename.getName());
+        for (File fileToScan : files) {
             String line;
             FileReader file;
             try {
-                file = new FileReader(filename.getAbsolutePath());
+                file = new FileReader(fileToScan.getAbsolutePath());
                 BufferedReader br = new BufferedReader(file);
 
                 while ((line = br.readLine()) != null) {

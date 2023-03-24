@@ -5,12 +5,8 @@ import com.kids.domacizadatak1.components.ResultRetriever;
 import com.kids.domacizadatak1.components.WebScanner;
 import com.kids.domacizadatak1.components.DirectoryCrawler;
 import com.kids.domacizadatak1.components.JobDispatcher;
-import com.kids.domacizadatak1.jobs.FileJob;
-import com.kids.domacizadatak1.jobs.ScanType;
-import com.kids.domacizadatak1.jobs.ScanningJob;
-import com.kids.domacizadatak1.jobs.WebJob;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.kids.domacizadatak1.jobs.*;
+import org.jsoup.Jsoup;
 
 import java.io.*;
 import java.util.Map;
@@ -20,14 +16,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-@SpringBootApplication
 public class CoreApp {
 
     private static DirectoryCrawler directoryCrawler;
     private static JobDispatcher jobDispatcher;
     private static FileScanner fileScanner;
     private static WebScanner webScanner;
-    private static final ResultRetriever resultRetriever = new ResultRetriever();
+    private static ResultRetriever resultRetriever;
 
     public static String keywords;
     public static String fileCorpusPrefix;
@@ -35,25 +30,27 @@ public class CoreApp {
     public static Integer fileScanningSizeLimit;
     public static Integer hopCount;
     public static Integer urlRefreshTime;
+    private static boolean killCore = false;
 
+    private static Thread directoryCrawlerThread;
+    private static Thread jobDispatcherThread;
     public static final CopyOnWriteArrayList<String> directoriesToCrawl = new CopyOnWriteArrayList<>();
     public static final BlockingQueue<ScanningJob> jobQueue = new LinkedBlockingQueue<>();
-    public static final BlockingQueue<FileJob> fileScannerJobQueue = new LinkedBlockingQueue<>();
-    public static final BlockingQueue<WebJob> webScannerJobQueue = new LinkedBlockingQueue<>();
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        SpringApplication.run(CoreApp.class, args);
+    public static void main(String[] args) throws IOException {
 
         setPropertyVariables();
         initializeComponents();
 
         Scanner scanner = new Scanner(System.in);
         String command, parameter = null, queryType = null;
-        boolean isQuery = false, isSummary = false;
+        boolean isQuery, isSummary = false;
         Map<String, Integer> resultMap;
         Map<String, Map<String, Integer>> summaryResultMap;
 
-        while(true) {
+        System.out.println("Welcome! Enter your first command:");
+
+        while(!killCore) {
             String userInput = scanner.nextLine();
             String[] arguments = userInput.trim().split(" ");
 
@@ -83,17 +80,28 @@ public class CoreApp {
 
             switch (command) {
                 case "ad" -> {
-                    directoriesToCrawl.add(parameter);
-                    //System.err.println("The requested directory could not be found.");
+                    File directory = new File(parameter);
+                    if (!(directory.exists() && directory.canRead())){
+                        System.err.println("The crawling process could not be started in directory " + parameter + ". " +
+                                "Check again if this is a valid directory.");
+                    } else {
+                        if(directoriesToCrawl.contains(parameter))
+                            continue;
+                        System.out.println("Starting to crawl through directory " + parameter + " ...");
+                        directoriesToCrawl.add(parameter);
+                    }
                 }
                 case "aw" -> {
                     try {
-                        if (!(webScanner.getUrlCache().contains(parameter) &&
-                                System.currentTimeMillis() - webScanner.getUrlCache().get(parameter) < CoreApp.urlRefreshTime))
-                            jobQueue.add(new WebJob(parameter, hopCount));
+                        Jsoup.connect(parameter).get();
+                        if (webScanner.getUrlCache().contains(parameter) &&
+                                        System.currentTimeMillis() - webScanner.getUrlCache().get(parameter) < CoreApp.urlRefreshTime)
+                            continue;
+                        System.out.println("Starting to scan URL " + parameter + " ...");
+                        jobQueue.add(new WebJob(parameter, hopCount));
                     }
                     catch (Exception e) {
-                        e.printStackTrace();
+                        System.err.println("The URL you have provided is invalid. Check again if " + parameter + " is a valid URL address.");
                     }
                 }
                 case "get", "query" -> {
@@ -130,11 +138,18 @@ public class CoreApp {
                 case "cws" -> {
                     resultRetriever.clearSummary(ScanType.WEB);
                     System.out.println("Clearing web corpus summary ...");
-
                 }
                 case "stop" -> {
                     try {
                         System.out.println("Stopping the system ...");
+
+                        directoryCrawler.setKillCrawler(true);
+                        jobQueue.add(new PoisonPill());
+
+                        directoryCrawlerThread.join();
+                        jobDispatcherThread.join();
+
+                        killCore = true;
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -145,32 +160,29 @@ public class CoreApp {
                 }
             }
         }
+        scanner.close();
+        System.out.println("Main/CLI has been successfully shut down.");
     }
 
-    public static void initializeComponents() throws InterruptedException {
+    public static void initializeComponents() {
         directoryCrawler = new DirectoryCrawler(directoriesToCrawl, jobQueue);
-        Thread directoryCrawlerThread = new Thread(directoryCrawler);
+        directoryCrawlerThread = new Thread(directoryCrawler);
         directoryCrawlerThread.start();
 
-        jobDispatcher = new JobDispatcher(jobQueue, fileScannerJobQueue, webScannerJobQueue);
-        Thread jobDispatcherThread = new Thread(jobDispatcher);
+        jobDispatcher = new JobDispatcher(jobQueue);
+        jobDispatcherThread = new Thread(jobDispatcher);
         jobDispatcherThread.start();
 
-        fileScanner = new FileScanner(fileScannerJobQueue);
-        Thread fileScannerThread = new Thread(fileScanner);
-        fileScannerThread.start();
+        fileScanner = new FileScanner();
 
-        webScanner = new WebScanner(webScannerJobQueue, jobQueue);
-        Thread webScannerThread = new Thread(webScanner);
-        webScannerThread.start();
+        webScanner = new WebScanner(jobQueue);
 
-        //resultRetriever = new ResultRetriever();
+        resultRetriever = new ResultRetriever();
     }
 
     public static void setPropertyVariables() throws IOException {
         String rootPath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
         String appConfigPath = rootPath + "application.properties";
-
         Properties appProperties = new Properties();
         appProperties.load(new FileInputStream(appConfigPath));
 
@@ -180,6 +192,14 @@ public class CoreApp {
         fileScanningSizeLimit = Integer.parseInt(appProperties.getProperty("file_scanning_size_limit"));
         hopCount = Integer.parseInt(appProperties.getProperty("hop_count"));
         urlRefreshTime = Integer.parseInt(appProperties.getProperty("url_refresh_time"));
+    }
+
+    public static FileScanner getFileScanner() {
+        return fileScanner;
+    }
+
+    public static WebScanner getWebScanner() {
+        return webScanner;
     }
 
     public static ResultRetriever getResultRetriever() {

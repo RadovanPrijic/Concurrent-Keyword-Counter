@@ -20,8 +20,8 @@ public class ResultRetriever implements ResultRetrieverInterface {
     private final Map<String, Future<Map<String, Integer>>> fileJobResultsMap = new ConcurrentHashMap<>();
     private final Map<String, Future<Map<String, Integer>>> webJobResultsMap = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Integer>> webDomainResultsMap = new ConcurrentHashMap<>();
-    private Map<String, Map<String, Integer>> fileSummaryResultsMap = new ConcurrentHashMap<>();
-    private Map<String, Map<String, Integer>> webSummaryResultsMap = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Integer>> fileSummaryResultsMap = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Integer>> webSummaryResultsMap = new ConcurrentHashMap<>();
 
     @Override
     public Map<String, Integer> retrieveResult(String commandType, String query) {
@@ -32,7 +32,7 @@ public class ResultRetriever implements ResultRetrieverInterface {
         if(queryType.equals("file")){
             if(fileJobResultsMap.containsKey(parameter)){
                 if (commandType.equals("query") && !fileJobResultsMap.get(parameter).isDone()) {
-                    System.out.println("The result for corpus " + parameter + " is still being calculated.");
+                    System.err.println("The result for corpus " + parameter + " is still being calculated.");
                     return null;
                 }
                 try {
@@ -41,10 +41,13 @@ public class ResultRetriever implements ResultRetrieverInterface {
                     e.printStackTrace();
                 }
             } else
-                System.out.println("There is no result for corpus " + parameter + ".");
+                System.err.println("There is no result for corpus " + parameter + ".");
         } else if (queryType.equals("web")){
+            if(webDomainResultsMap.get(parameter) != null)
+                return webDomainResultsMap.get(parameter);
+
             Future<Map<String, Map<String, Integer>>> webJobResult =
-                    this.resultRetrieverCompletionService.submit(new WebDomainResultWorker("get", parameter,
+                    this.resultRetrieverCompletionService.submit(new WebDomainResultWorker(commandType, parameter,
                                                                                             webJobResultsMap, webDomainResultsMap));
             try {
                 return webJobResult.get().get(parameter);
@@ -57,6 +60,11 @@ public class ResultRetriever implements ResultRetrieverInterface {
 
     @Override
     public Map<String, Map<String, Integer>> retrieveSummary(String commandType, ScanType summaryType) {
+        if(summaryType == ScanType.FILE && !fileSummaryResultsMap.isEmpty())
+            return fileSummaryResultsMap;
+        if(summaryType == ScanType.WEB && !webSummaryResultsMap.isEmpty())
+            return webSummaryResultsMap;
+
         Future<Map<String, Map<String, Integer>>> jobResult =
                 this.resultRetrieverCompletionService.submit(new SummaryResultWorker(commandType, summaryType, fileJobResultsMap,
                         webJobResultsMap, webDomainResultsMap, fileSummaryResultsMap, webSummaryResultsMap));
@@ -101,23 +109,7 @@ public class ResultRetriever implements ResultRetrieverInterface {
         }
     }
 
-    public Map<String, Future<Map<String, Integer>>> getFileJobResultsMap() {
-        return fileJobResultsMap;
-    }
-
-    public Map<String, Future<Map<String, Integer>>> getWebJobResultsMap() {
-        return webJobResultsMap;
-    }
-
-    public Map<String, Map<String, Integer>> getWebDomainResultsMap() {
-        return webDomainResultsMap;
-    }
-
-    public Map<String, Map<String, Integer>> getFileSummaryResultsMap() {
-        return fileSummaryResultsMap;
-    }
-
-    public Map<String, Map<String, Integer>> getWebSummaryResultsMap() {
-        return webSummaryResultsMap;
+    public ExecutorService getResultRetrieverThreadPool() {
+        return resultRetrieverThreadPool;
     }
 }

@@ -1,6 +1,5 @@
 package com.kids.domacizadatak1.jobs;
 
-import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -13,7 +12,7 @@ public class PoisonPill implements ScanningJob{
 
     @Override
     public ScanType getType() {
-        return null;
+        return this.scanType;
     }
 
     @Override

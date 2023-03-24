@@ -26,22 +26,16 @@ public class FileJob implements ScanningJob{
 
     @Override
     public Future<Map<String, Integer>> initiate() {
-        Future<Map<String, Integer>> fileJobResult = this.forkJoinPool.submit(new FileScannerWorker(textFiles));
-        /*
-        try {
-            System.out.println(fileJobResult.get());
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-        */
-        return fileJobResult;
+        return this.forkJoinPool.submit(new FileScannerWorker(textFiles));
     }
 
     public void setFilesToAnalyse(File corpusDirectory) {
-        this.textFiles = new ArrayList<>();
-        for (File file : Objects.requireNonNull(corpusDirectory.listFiles())) {
+        this.textFiles = new CopyOnWriteArrayList<>();
+        for (File file : corpusDirectory.listFiles()) {
             if (file.isFile() && file.canRead())
                 textFiles.add(file);
+            else
+                System.err.println("File " + file + " could not be read.");
         }
     }
 

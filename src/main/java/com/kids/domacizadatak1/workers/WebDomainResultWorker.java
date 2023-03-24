@@ -31,11 +31,6 @@ public class WebDomainResultWorker implements Callable<Map<String, Map<String, I
         Map<String, Map<String, Integer>> resultMap = new ConcurrentHashMap<>();
         boolean flag = false;
 
-        if(webDomainResultsMap.get(domainName) != null){
-            resultMap.put(domainName, webDomainResultsMap.get(domainName));
-            return resultMap;
-        }
-
         for (String key : webJobResultsMap.keySet()) {
             try {
                 URL url = new URL(key);
@@ -45,14 +40,16 @@ public class WebDomainResultWorker implements Callable<Map<String, Map<String, I
                 if (domainName.equals(extractedDomainName)) {
                     flag = true;
                     if (queryType.equals("query")) {
-                        if (!webJobResultsMap.get(key).isDone()) {
-                            System.out.println("The result for corpus " + domainName + " is still being calculated.");
+                        if (webJobResultsMap.get(key) != null && !webJobResultsMap.get(key).isDone()) {
+                            System.err.println("The result for corpus " + domainName + " is still being calculated.");
                             return null;
                         }
                     }
                     for (Map.Entry<String,Integer> entry : keywordsMap.entrySet()) {
-                        Integer newCountValue = entry.getValue() + webJobResultsMap.get(key).get().get(entry.getKey());
-                        keywordsMap.put(entry.getKey(), newCountValue);
+                        if(webJobResultsMap.get(key) != null && webJobResultsMap.get(key).get() != null){
+                            Integer newCountValue = entry.getValue() + webJobResultsMap.get(key).get().get(entry.getKey());
+                            keywordsMap.put(entry.getKey(), newCountValue);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -60,7 +57,7 @@ public class WebDomainResultWorker implements Callable<Map<String, Map<String, I
             }
         }
         if (!flag) {
-            System.out.println("There is no result for corpus " + domainName + ".");
+            System.err.println("There is no result for corpus " + domainName + ".");
             return null;
         }
         webDomainResultsMap.put(domainName, keywordsMap);

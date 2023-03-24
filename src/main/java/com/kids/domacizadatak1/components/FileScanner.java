@@ -6,27 +6,21 @@ import com.kids.domacizadatak1.jobs.FileJob;
 import java.util.Map;
 import java.util.concurrent.*;
 
-public class FileScanner implements Runnable {
+public class FileScanner {
 
-    private BlockingQueue<FileJob> fileScannerJobQueue;
     private final ExecutorService fileScannerThreadPool;
 
-    public FileScanner(BlockingQueue<FileJob> fileScannerJobQueue) {
-        this.fileScannerJobQueue = fileScannerJobQueue;
+    public FileScanner() {
         this.fileScannerThreadPool = new ForkJoinPool();
     }
 
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                FileJob fileJob = this.fileScannerJobQueue.take();
-                fileJob.setForkJoinPool((ForkJoinPool) fileScannerThreadPool);
-                Future<Map<String, Integer>> fileJobResult = fileJob.initiate();
-                CoreApp.getResultRetriever().addCorpusResult(fileJob, fileJobResult);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    public void submitJobToPool (FileJob fileJob){
+        fileJob.setForkJoinPool((ForkJoinPool) fileScannerThreadPool);
+        Future<Map<String, Integer>> fileJobResult = fileJob.initiate();
+        CoreApp.getResultRetriever().addCorpusResult(fileJob, fileJobResult);
+    }
+
+    public ExecutorService getFileScannerThreadPool() {
+        return fileScannerThreadPool;
     }
 }

@@ -47,10 +47,103 @@ public class CoreApp {
         setPropertyVariables();
         initializeComponents();
 
+        Scanner scanner = new Scanner(System.in);
+        String command, parameter = null, queryType = null;
+        boolean isQuery = false, isSummary = false;
+        Map<String, Integer> resultMap;
+        Map<String, Map<String, Integer>> summaryResultMap;
+
         while(true) {
-            Scanner scanner = new Scanner(System.in);
             String userInput = scanner.nextLine();
-            writeCommand(userInput);
+            String[] arguments = userInput.trim().split(" ");
+
+            if(arguments.length == 0 || arguments.length > 2){
+                System.err.println("You have entered an invalid number of arguments.");
+                continue;
+            }
+            command = arguments[0];
+
+            if(arguments.length == 2){
+                parameter = arguments[1];
+                isQuery = parameter.contains("|") && parameter.split("\\|").length == 2;
+                if(isQuery){
+                    String[] queryArguments = parameter.split("\\|");
+                    if(queryArguments[0].equals("file")){
+                        queryType = "file";
+                        isSummary = queryArguments[1].equals("summary");
+                    } else if (queryArguments[0].equals("web")){
+                        queryType = "web";
+                        isSummary = queryArguments[1].equals("summary");
+                    } else {
+                        System.err.println("You have entered an invalid query parameter.");
+                        continue;
+                    }
+                }
+            }
+
+            switch (command) {
+                case "ad" -> {
+                    directoriesToCrawl.add(parameter);
+                    //System.err.println("The requested directory could not be found.");
+                }
+                case "aw" -> {
+                    try {
+                        if (!(webScanner.getUrlCache().contains(parameter) &&
+                                System.currentTimeMillis() - webScanner.getUrlCache().get(parameter) < CoreApp.urlRefreshTime))
+                            jobQueue.add(new WebJob(parameter, hopCount));
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                case "get", "query" -> {
+                    if(queryType.equals("file")){
+                        if(!isSummary){
+                            resultMap = resultRetriever.retrieveResult(command, parameter);
+                            if (resultMap != null) {
+                                resultMap.forEach((key, value) -> System.out.println((key + ":" + value)));
+                            }
+                        } else {
+                            summaryResultMap = resultRetriever.retrieveSummary(command, ScanType.FILE);
+                            if (summaryResultMap != null) {
+                                summaryResultMap.forEach((key, value) -> System.out.println((key + ":" + value)));
+                            }
+                        }
+                    } else {
+                        if(!isSummary){
+                            resultMap = resultRetriever.retrieveResult(command, parameter);
+                            if (resultMap != null) {
+                                resultMap.forEach((key, value) -> System.out.println((key + ":" + value)));
+                            }
+                        } else {
+                            summaryResultMap = resultRetriever.retrieveSummary(command, ScanType.WEB);
+                            if (summaryResultMap != null) {
+                                summaryResultMap.forEach((key, value) -> System.out.println((key + ":" + value)));
+                            }
+                        }
+                    }
+                }
+                case "cfs" -> {
+                    resultRetriever.clearSummary(ScanType.FILE);
+                    System.out.println("Clearing file corpus summary ...");
+                }
+                case "cws" -> {
+                    resultRetriever.clearSummary(ScanType.WEB);
+                    System.out.println("Clearing web corpus summary ...");
+
+                }
+                case "stop" -> {
+                    try {
+                        System.out.println("Stopping the system ...");
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                default -> {
+                    System.err.println("You have entered an invalid command.");
+                }
+            }
         }
     }
 
@@ -87,92 +180,6 @@ public class CoreApp {
         fileScanningSizeLimit = Integer.parseInt(appProperties.getProperty("file_scanning_size_limit"));
         hopCount = Integer.parseInt(appProperties.getProperty("hop_count"));
         urlRefreshTime = Integer.parseInt(appProperties.getProperty("url_refresh_time"));
-    }
-
-    public static void writeCommand(String userInput){
-        String command = null;
-        String parameter = null;
-
-        if(userInput.split(" ").length > 1 ){
-            command = userInput.split(" ")[0].trim();
-            parameter = userInput.split(" ")[1].trim();
-        } else
-            command = userInput;
-
-        switch (command) {
-            case "ad" -> {
-                try {
-                    File file = new File(parameter);
-                    System.out.println(file.getName());
-                    directoriesToCrawl.add(parameter);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            case "aw" -> {
-                try {
-                    if (!(webScanner.getUrlCache().contains(parameter) &&
-                            System.currentTimeMillis() - webScanner.getUrlCache().get(parameter) < CoreApp.urlRefreshTime))
-                        jobQueue.add(new WebJob(parameter, hopCount));
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            case "get" -> {
-                // Get single result
-                //Map<String, Integer> resultMap = resultRetriever.retrieveResult(command, parameter);
-                //System.out.println(resultMap.entrySet());
-
-                // Get summary
-                Map<String, Map<String, Integer>> resultMap = resultRetriever.retrieveSummary(command, ScanType.WEB);
-                System.out.println(resultMap.entrySet());
-            }
-            case "query" -> {
-                if(!(parameter.split("\\|")[1].equals("summary"))){
-                    Map<String, Integer> resultMap = resultRetriever.retrieveResult(command, parameter);
-                    System.out.println(resultMap.entrySet());
-                } else if(parameter.split("\\|")[0].equals("file") && parameter.split("\\|")[1].equals("summary")) {
-                    Map<String, Map<String, Integer>> resultMap = resultRetriever.retrieveSummary(command, ScanType.FILE);
-                    System.out.println(resultMap.entrySet());
-                } else if (parameter.split("\\|")[0].equals("web") && parameter.split("\\|")[1].equals("summary")){
-                    Map<String, Map<String, Integer>> resultMap = resultRetriever.retrieveSummary(command, ScanType.WEB);
-                    System.out.println(resultMap.entrySet());
-                }
-            }
-            case "cfs" -> {
-                try {
-                    resultRetriever.clearSummary(ScanType.FILE);
-                    System.out.println("Clearing file corpus summary ...");
-                    //System.err.println(resultRetriever.getFileSummaryResultsMap());
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            case "cws" -> {
-                try {
-                    resultRetriever.clearSummary(ScanType.WEB);
-                    System.out.println("Clearing web corpus summary ...");
-                    //System.err.println(resultRetriever.getWebSummaryResultsMap().entrySet());
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            case "stop" -> {
-                try {
-                    System.out.println("Stopping the system ...");
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            default -> {
-                System.out.println("You have entered an invalid command.");
-            }
-        }
     }
 
     public static ResultRetriever getResultRetriever() {

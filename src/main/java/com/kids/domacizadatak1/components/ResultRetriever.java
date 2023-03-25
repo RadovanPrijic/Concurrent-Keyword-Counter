@@ -109,7 +109,8 @@ public class ResultRetriever implements ResultRetrieverInterface {
         }
     }
 
-    public ExecutorService getResultRetrieverThreadPool() {
-        return resultRetrieverThreadPool;
+    public void stop(){
+        resultRetrieverThreadPool.shutdown();
+        System.out.println("Result retriever thread pool has been successfully shut down.");
     }
 }

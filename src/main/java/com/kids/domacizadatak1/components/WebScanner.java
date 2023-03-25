@@ -11,11 +11,13 @@ import java.util.concurrent.*;
 public class WebScanner {
 
     private BlockingQueue<ScanningJob> jobQueue;
+    private ResultRetriever resultRetriever;
     private final ExecutorService webScannerThreadPool;
     private final ConcurrentHashMap<String, Long> urlCache;
 
-    public WebScanner(BlockingQueue<ScanningJob> jobQueue) {
+    public WebScanner(BlockingQueue<ScanningJob> jobQueue, ResultRetriever resultRetriever) {
         this.jobQueue = jobQueue;
+        this.resultRetriever = resultRetriever;
         this.webScannerThreadPool = Executors.newCachedThreadPool();
         this.urlCache = new ConcurrentHashMap<>();
     }
@@ -25,11 +27,12 @@ public class WebScanner {
         webJob.setCachedThreadPool(webScannerThreadPool);
         webJob.setUrlCache(urlCache);
         Future<Map<String, Integer>> webJobResult = webJob.initiate();
-        CoreApp.getResultRetriever().addCorpusResult(webJob, webJobResult);
+        resultRetriever.addCorpusResult(webJob, webJobResult);
     }
 
-    public ExecutorService getWebScannerThreadPool() {
-        return webScannerThreadPool;
+    public void stop(){
+        webScannerThreadPool.shutdown();
+        System.out.println("Web scanner thread pool has been successfully shut down.");
     }
 
     public ConcurrentHashMap<String, Long> getUrlCache() {

@@ -145,6 +145,7 @@ public class CoreApp {
 
                         directoryCrawler.setKillCrawler(true);
                         jobQueue.add(new PoisonPill());
+                        resultRetriever.stop();
 
                         directoryCrawlerThread.join();
                         jobDispatcherThread.join();
@@ -169,15 +170,15 @@ public class CoreApp {
         directoryCrawlerThread = new Thread(directoryCrawler);
         directoryCrawlerThread.start();
 
-        jobDispatcher = new JobDispatcher(jobQueue);
+        resultRetriever = new ResultRetriever();
+
+        fileScanner = new FileScanner(resultRetriever);
+
+        webScanner = new WebScanner(jobQueue, resultRetriever);
+
+        jobDispatcher = new JobDispatcher(jobQueue, fileScanner, webScanner);
         jobDispatcherThread = new Thread(jobDispatcher);
         jobDispatcherThread.start();
-
-        fileScanner = new FileScanner();
-
-        webScanner = new WebScanner(jobQueue);
-
-        resultRetriever = new ResultRetriever();
     }
 
     public static void setPropertyVariables() throws IOException {
@@ -192,17 +193,5 @@ public class CoreApp {
         fileScanningSizeLimit = Integer.parseInt(appProperties.getProperty("file_scanning_size_limit"));
         hopCount = Integer.parseInt(appProperties.getProperty("hop_count"));
         urlRefreshTime = Integer.parseInt(appProperties.getProperty("url_refresh_time"));
-    }
-
-    public static FileScanner getFileScanner() {
-        return fileScanner;
-    }
-
-    public static WebScanner getWebScanner() {
-        return webScanner;
-    }
-
-    public static ResultRetriever getResultRetriever() {
-        return resultRetriever;
     }
 }

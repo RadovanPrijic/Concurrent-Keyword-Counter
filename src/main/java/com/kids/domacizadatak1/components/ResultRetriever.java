@@ -48,12 +48,15 @@ public class ResultRetriever implements ResultRetrieverInterface {
 
             Future<Map<String, Map<String, Integer>>> webJobResult =
                     this.resultRetrieverCompletionService.submit(new WebDomainResultWorker(commandType, parameter,
-                                                                                            webJobResultsMap, webDomainResultsMap));
-            try {
-                return webJobResult.get().get(parameter);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+                                                                                                        webJobResultsMap, webDomainResultsMap));
+            if(commandType.equals("get") || (commandType.equals("query") && webJobResult.isDone())){
+                try {
+                    return webJobResult.get().get(parameter);
+                } catch (Exception e) {
+                    System.err.println("There is no result for corpus " + parameter + ".");
+                }
+            } else
+                System.err.println("The result for corpus " + parameter + " is still being calculated.");
         }
         return null;
     }
@@ -68,11 +71,15 @@ public class ResultRetriever implements ResultRetrieverInterface {
         Future<Map<String, Map<String, Integer>>> jobResult =
                 this.resultRetrieverCompletionService.submit(new SummaryResultWorker(commandType, summaryType, fileJobResultsMap,
                         webJobResultsMap, webDomainResultsMap, fileSummaryResultsMap, webSummaryResultsMap));
-        try {
-            return jobResult.get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        if(commandType.equals("get") || (commandType.equals("query") && jobResult.isDone())){
+            try {
+                return jobResult.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else
+            System.err.println("The requested summary could not be provided because some of the results are still being calculated.");
         return null;
     }
 

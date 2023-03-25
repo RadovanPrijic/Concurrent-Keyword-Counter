@@ -75,7 +75,8 @@ public class CoreApp {
                         System.err.println("You have entered an invalid query parameter.");
                         continue;
                     }
-                }
+                } else
+                    queryType = "invalid";
             }
 
             switch (command) {
@@ -117,7 +118,7 @@ public class CoreApp {
                                 summaryResultMap.forEach((key, value) -> System.out.println((key + ":" + value)));
                             }
                         }
-                    } else {
+                    } else if (queryType.equals("web")){
                         if(!isSummary){
                             resultMap = resultRetriever.retrieveResult(command, parameter);
                             if (resultMap != null) {
@@ -129,6 +130,9 @@ public class CoreApp {
                                 summaryResultMap.forEach((key, value) -> System.out.println((key + ":" + value)));
                             }
                         }
+                    } else {
+                        System.err.println("You have entered an invalid query parameter.");
+                        continue;
                     }
                 }
                 case "cfs" -> {

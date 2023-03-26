@@ -75,7 +75,7 @@ public class ResultRetriever implements ResultRetrieverInterface {
         Future<Map<String, Map<String, Integer>>> jobResult =
                 this.resultRetrieverCompletionService.submit(new SummaryResultWorker(commandType, summaryType, fileJobResultsMap,
                         webJobResultsMap, webDomainResultsMap, fileSummaryResultsMap, webSummaryResultsMap));
-        
+
         if(commandType.equals("get") || (commandType.equals("query")) && jobResult.isDone()){
             try {
                 if(jobResult.get() != null)

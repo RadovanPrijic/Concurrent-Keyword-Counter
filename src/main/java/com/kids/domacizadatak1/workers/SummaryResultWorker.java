@@ -13,23 +13,23 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
     private ScanType summaryType;
     private Map<String, Future<Map<String, Integer>>> fileJobResultsMap;
     private Map<String, Future<Map<String, Integer>>> webJobResultsMap;
-    private Map<String, Map<String, Integer>> webDomainResultsMap;
     private Map<String, Map<String, Integer>> fileSummaryResultsMap;
     private Map<String, Map<String, Integer>> webSummaryResultsMap;
 
     public SummaryResultWorker(String queryType, ScanType summaryType,
                                Map<String, Future<Map<String, Integer>>> fileJobResultsMap,
                                Map<String, Future<Map<String, Integer>>> webJobResultsMap,
-                               Map<String, Map<String, Integer>> webDomainResultsMap,
                                Map<String, Map<String, Integer>> fileSummaryResultsMap,
                                Map<String, Map<String, Integer>> webSummaryResultsMap) {
         this.queryType = queryType;
         this.summaryType = summaryType;
         this.fileJobResultsMap = fileJobResultsMap;
         this.webJobResultsMap = webJobResultsMap;
-        this.webDomainResultsMap = webDomainResultsMap;
         this.fileSummaryResultsMap = fileSummaryResultsMap;
         this.webSummaryResultsMap = webSummaryResultsMap;
+        // query file|summary   query web|summary        get file|summary   get web|summary     get file|corpus_mcfly    get web|en.wikipedia.org
+        //                                query file|corpus_mcfly           query web|en.wikipedia.org
+        // aw https://www.gatesnotes.com/2019-Annual-Letter
     }
 
     @Override
@@ -47,6 +47,8 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
                 for(String key : fileJobResultsMap.keySet()){
                     fileSummaryResultsMap.put(key, fileJobResultsMap.get(key).get());
                 }
+                if(fileSummaryResultsMap.isEmpty())
+                    return null;
             }
             return fileSummaryResultsMap;
 
@@ -72,8 +74,6 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
                             Integer newCountValue = entry.getValue() + webJobResultsMap.get(key).get().get(entry.getKey());
                             domainKeywordMap.put(entry.getKey(), newCountValue);
                         }
-                        System.out.println(extractedDomainName);
-                        System.out.println(domainKeywordMap);
                         webSummaryResultsMap.put(extractedDomainName, domainKeywordMap);
                     }
                 }
@@ -84,8 +84,5 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
             return webSummaryResultsMap;
         }
         return null;
-        // query file|summary   query web|summary        get file|summary   get web|summary     get file|corpus_mcfly    get web|en.wikipedia.org
-        //                                query file|corpus_mcfly           query web|en.wikipedia.org
-        // aw https://www.gatesnotes.com/2019-Annual-Letter
     }
 }

@@ -26,7 +26,8 @@ public class FileJob implements ScanningJob{
 
     @Override
     public Future<Map<String, Integer>> initiate() {
-        return this.forkJoinPool.submit(new FileScannerWorker(textFiles));
+        //System.out.println("Starting file scan for file|" + corpusDirectoryName);
+        return forkJoinPool.submit(new FileScannerWorker(textFiles));
     }
 
     public void setFilesToAnalyse(File corpusDirectory) {

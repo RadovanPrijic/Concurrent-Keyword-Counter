@@ -38,7 +38,7 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
             if(queryType.equals("query")){
                 for(String key : fileJobResultsMap.keySet()){
                     if (!fileJobResultsMap.get(key).isDone()) {
-                        //System.err.println("The requested summary could not be provided because some of the results are still being calculated.");
+                        System.err.println("The requested summary could not be provided because some of the results are still being calculated.");
                         return null;
                     }
                     fileSummaryResultsMap.put(key, fileJobResultsMap.get(key).get());
@@ -47,8 +47,7 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
                 for(String key : fileJobResultsMap.keySet()){
                     fileSummaryResultsMap.put(key, fileJobResultsMap.get(key).get());
                 }
-            } //query file|summary query web|summary get file|summary get web|summary get file|corpus_mcfly get web|en.wikipedia.org
-            // query file|corpus_mcfly query web|en.wikipedia.org
+            }
             return fileSummaryResultsMap;
 
         } else if (summaryType == ScanType.WEB){
@@ -61,7 +60,7 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
                     if (webSummaryResultsMap.get(extractedDomainName) == null) {
                         if (queryType.equals("query")) {
                             if (webJobResultsMap.get(key) != null && !webJobResultsMap.get(key).isDone()) {
-                                //System.err.println("The requested summary could not be provided because some of the results are still being calculated.");
+                                System.err.println("The requested summary could not be provided because some of the results are still being calculated.");
                                 return null;
                             }
                         }
@@ -73,6 +72,8 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
                             Integer newCountValue = entry.getValue() + webJobResultsMap.get(key).get().get(entry.getKey());
                             domainKeywordMap.put(entry.getKey(), newCountValue);
                         }
+                        System.out.println(extractedDomainName);
+                        System.out.println(domainKeywordMap);
                         webSummaryResultsMap.put(extractedDomainName, domainKeywordMap);
                     }
                 }
@@ -83,5 +84,8 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
             return webSummaryResultsMap;
         }
         return null;
+        // query file|summary   query web|summary        get file|summary   get web|summary     get file|corpus_mcfly    get web|en.wikipedia.org
+        //                                query file|corpus_mcfly           query web|en.wikipedia.org
+        // aw https://www.gatesnotes.com/2019-Annual-Letter
     }
 }

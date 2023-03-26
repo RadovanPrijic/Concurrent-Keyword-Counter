@@ -54,7 +54,7 @@ public class CoreApp {
             String userInput = scanner.nextLine();
             String[] arguments = userInput.trim().split(" ");
 
-            if(arguments.length == 0 || arguments.length > 2){
+            if((arguments.length == 1 && arguments[0].equals("")) || arguments.length > 2){
                 System.err.println("You have entered an invalid number of arguments.");
                 continue;
             }
@@ -86,9 +86,11 @@ public class CoreApp {
                         System.err.println("The crawling process could not be started in directory " + parameter + ". " +
                                 "Check again if this is a valid directory.");
                     } else {
-                        if(directoriesToCrawl.contains(parameter))
+                        if(directoriesToCrawl.contains(parameter)){
+                            System.err.println("Directory " + parameter + " has already been added to the list of directories.");
                             continue;
-                        System.out.println("Starting to crawl through directory " + parameter + " ...");
+                        }
+                        System.out.println("Adding directory " + parameter + " ...");
                         directoriesToCrawl.add(parameter);
                     }
                 }
@@ -96,9 +98,11 @@ public class CoreApp {
                     try {
                         Jsoup.connect(parameter).get();
                         if (webScanner.getUrlCache().contains(parameter) &&
-                                        System.currentTimeMillis() - webScanner.getUrlCache().get(parameter) < CoreApp.urlRefreshTime)
+                                        System.currentTimeMillis() - webScanner.getUrlCache().get(parameter) < CoreApp.urlRefreshTime) {
+                            System.err.println("The entered URL address has already been scanned.");
                             continue;
-                        System.out.println("Starting to scan URL " + parameter + " ...");
+                        }
+                        System.out.println("Adding URL " + parameter + " ...");
                         jobQueue.add(new WebJob(parameter, hopCount));
                     }
                     catch (Exception e) {
@@ -166,7 +170,7 @@ public class CoreApp {
             }
         }
         scanner.close();
-        System.out.println("Main/CLI has been successfully shut down.");
+        System.out.println("The main component has been successfully shut down.");
     }
 
     public static void initializeComponents() {

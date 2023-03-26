@@ -24,7 +24,7 @@ public class WebJob implements ScanningJob {
 
     @Override
     public Future<Map<String, Integer>> initiate() {
-        return this.cachedThreadPool.submit(new WebScannerWorker(url, hopCount, jobQueue, urlCache));
+        return cachedThreadPool.submit(new WebScannerWorker(url, hopCount, jobQueue, urlCache));
     }
 
     @Override

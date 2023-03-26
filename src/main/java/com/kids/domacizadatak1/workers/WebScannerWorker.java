@@ -40,7 +40,7 @@ public class WebScannerWorker implements Callable<Map<String,Integer>> {
             System.err.println("URL address " + url + " could not be scanned.");
             return null;
         }
-        Elements links = doc.select("a[href]");;
+        //System.out.println("Starting web scan for web|" + url);
 
         String[] words = doc.text().split("\\s+");
         for (String word : words) {
@@ -49,15 +49,14 @@ public class WebScannerWorker implements Callable<Map<String,Integer>> {
             }
         }
         if (hopCount > 0) {
+            Elements links = doc.select("a[href]");;
+
             for (Element link : links) {
                 String extractedUrl = link.attr("abs:href").trim();
                 extractedUrl.replaceAll(" ", "%20");
-                //System.err.println("URL address to be scanned: " + extractedUrl);
 
                 if ((urlCache.contains(extractedUrl) && System.currentTimeMillis() - urlCache.get(extractedUrl) < CoreApp.urlRefreshTime) ||
-                        !(extractedUrl.startsWith("http")) || !(extractedUrl.startsWith("https")) || extractedUrl.endsWith(".pdf") ||
-                        extractedUrl.endsWith(".jpg") || extractedUrl.endsWith(".png") || extractedUrl.endsWith(".php") ||
-                        extractedUrl.endsWith(".js") || extractedUrl.isBlank())
+                        !(extractedUrl.startsWith("http")) || !(extractedUrl.startsWith("https")) || extractedUrl.isBlank())
                     continue;
                 else {
                     jobQueue.add(new WebJob(extractedUrl, hopCount - 1));

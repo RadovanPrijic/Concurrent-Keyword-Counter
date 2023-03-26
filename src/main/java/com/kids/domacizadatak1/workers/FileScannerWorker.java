@@ -44,12 +44,11 @@ public class FileScannerWorker extends RecursiveTask<Map<String,Integer>> {
         int byteSum = 0;
 
         for (File textFile : textFiles) {
-            breakawayFiles.add(textFile);
             byteSum += textFile.length();
-
             if (byteSum > CoreApp.fileScanningSizeLimit){
                 break;
             }
+            breakawayFiles.add(textFile);
         }
         textFiles.removeAll(breakawayFiles);
         return breakawayFiles;

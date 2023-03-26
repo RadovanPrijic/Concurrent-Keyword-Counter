@@ -1,7 +1,6 @@
 package com.kids.domacizadatak1.jobs;
 
 import java.util.Map;
-import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 
 public interface ScanningJob {

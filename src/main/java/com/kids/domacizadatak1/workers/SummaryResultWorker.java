@@ -3,8 +3,10 @@ package com.kids.domacizadatak1.workers;
 import com.kids.domacizadatak1.jobs.ScanType;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 public class SummaryResultWorker implements Callable<Map<String, Map<String, Integer>>> {
@@ -69,7 +71,7 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
                         if(webJobResultsMap.get(key).get() != null)
                             webSummaryResultsMap.put(extractedDomainName, webJobResultsMap.get(key).get());
                     } else {
-                        Map<String, Integer> domainKeywordMap = webSummaryResultsMap.get(extractedDomainName);
+                        Map<String, Integer> domainKeywordMap = new ConcurrentHashMap<>(webSummaryResultsMap.get(extractedDomainName));
                         for (Map.Entry<String,Integer> entry : domainKeywordMap.entrySet()) {
                             Integer newCountValue = entry.getValue() + webJobResultsMap.get(key).get().get(entry.getKey());
                             domainKeywordMap.put(entry.getKey(), newCountValue);
@@ -81,6 +83,8 @@ public class SummaryResultWorker implements Callable<Map<String, Map<String, Int
                     e.printStackTrace();
                 }
             }
+            if(webSummaryResultsMap.isEmpty())
+                return null;
             return webSummaryResultsMap;
         }
         return null;

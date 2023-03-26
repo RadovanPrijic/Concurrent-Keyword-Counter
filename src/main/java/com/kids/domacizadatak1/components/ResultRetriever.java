@@ -54,7 +54,7 @@ public class ResultRetriever implements ResultRetrieverInterface {
                     if(webJobResult.get() != null)
                         return webJobResult.get().get(parameter);
                     else {
-                        System.err.println("The result for corpus " + parameter + " is still being calculated.");
+                        System.err.println("The result for corpus " + parameter + " could not be provided.");
                         return null;
                     }
                 } catch (Exception e) {
@@ -75,14 +75,13 @@ public class ResultRetriever implements ResultRetrieverInterface {
         Future<Map<String, Map<String, Integer>>> jobResult =
                 this.resultRetrieverCompletionService.submit(new SummaryResultWorker(commandType, summaryType, fileJobResultsMap,
                         webJobResultsMap, fileSummaryResultsMap, webSummaryResultsMap));
-        System.out.println("HEFITOOOOOOOOOOOOOO");
 
         if(commandType.equals("get") || (commandType.equals("query")) && jobResult.isDone()){
             try {
                 if(jobResult.get() != null)
                     return jobResult.get();
                 else {
-                    System.err.println("The requested summary could not be provided because some of the results are still being calculated.");
+                    System.err.println("The requested summary could not be provided.");
                     return null;
                 }
             } catch (Exception e) {

@@ -55,7 +55,7 @@ public class WebScannerWorker implements Callable<Map<String,Integer>> {
                 String extractedUrl = link.attr("abs:href").trim();
                 extractedUrl.replaceAll(" ", "%20");
 
-                if ((urlCache.contains(extractedUrl) && System.currentTimeMillis() - urlCache.get(extractedUrl) < CoreApp.urlRefreshTime) ||
+                if ((urlCache.get(extractedUrl) != null && System.currentTimeMillis() - urlCache.get(extractedUrl) < CoreApp.urlRefreshTime) ||
                         !(extractedUrl.startsWith("http")) || !(extractedUrl.startsWith("https")) || extractedUrl.isBlank())
                     continue;
                 else {

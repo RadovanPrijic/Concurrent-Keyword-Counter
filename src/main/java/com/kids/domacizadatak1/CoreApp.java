@@ -97,7 +97,7 @@ public class CoreApp {
                 case "aw" -> {
                     try {
                         Jsoup.connect(parameter).get();
-                        if (webScanner.getUrlCache().contains(parameter) &&
+                        if (webScanner.getUrlCache().get(parameter) != null &&
                                         System.currentTimeMillis() - webScanner.getUrlCache().get(parameter) < CoreApp.urlRefreshTime) {
                             System.err.println("The entered URL address has already been scanned.");
                             continue;

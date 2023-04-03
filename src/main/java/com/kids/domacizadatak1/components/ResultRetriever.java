@@ -49,7 +49,7 @@ public class ResultRetriever implements ResultRetrieverInterface {
             Future<Map<String, Map<String, Integer>>> webJobResult =
                     this.resultRetrieverCompletionService.submit(new WebDomainResultWorker(commandType, parameter,
                                                                                                         webJobResultsMap, webDomainResultsMap));
-            if(commandType.equals("get") || (commandType.equals("query")) && webJobResult.isDone()){
+            if(commandType.equals("get") || ((commandType.equals("query")) && webJobResult.isDone())){
                 try {
                     if(webJobResult.get() != null)
                         return webJobResult.get().get(parameter);
@@ -76,7 +76,7 @@ public class ResultRetriever implements ResultRetrieverInterface {
                 this.resultRetrieverCompletionService.submit(new SummaryResultWorker(commandType, summaryType, fileJobResultsMap,
                         webJobResultsMap, fileSummaryResultsMap, webSummaryResultsMap));
 
-        if(commandType.equals("get") || (commandType.equals("query")) && jobResult.isDone()){
+        if(commandType.equals("get") || ((commandType.equals("query")) && jobResult.isDone())){
             try {
                 if(jobResult.get() != null)
                     return jobResult.get();
